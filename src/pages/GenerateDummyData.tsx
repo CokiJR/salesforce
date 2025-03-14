@@ -72,7 +72,7 @@ const GenerateDummyData = () => {
       .upsert(dummyCustomers, { onConflict: "name" });
 
     if (error) throw error;
-    setProgress(20);
+    setProgress(15);
     return "Customers generated successfully";
   };
 
@@ -155,7 +155,7 @@ const GenerateDummyData = () => {
       .upsert(dummyProducts, { onConflict: "sku" });
 
     if (error) throw error;
-    setProgress(40);
+    setProgress(30);
     return "Products generated successfully";
   };
 
@@ -207,7 +207,7 @@ const GenerateDummyData = () => {
       .upsert(stops, { onConflict: "route_id, customer_id" });
 
     if (stopError) throw stopError;
-    setProgress(60);
+    setProgress(45);
     return "Routes generated successfully";
   };
 
@@ -290,8 +290,105 @@ const GenerateDummyData = () => {
       if (updateError) throw updateError;
     }
 
-    setProgress(80);
+    setProgress(60);
     return "Orders generated successfully";
+  };
+
+  const generateTransactions = async () => {
+    // Get the orders we created
+    const { data: orders, error: ordersFetchError } = await supabase
+      .from("orders")
+      .select("id, customer_id, total_amount")
+      .limit(5);
+
+    if (ordersFetchError) throw ordersFetchError;
+    if (!orders?.length) throw new Error("No orders found");
+
+    // Create a transactions table if it doesn't exist yet
+    // This would be normally done via SQL migrations, but for this demo
+    // we'll check if it exists and create it if needed
+    const { error: transactionCheckError } = await supabase
+      .from("transactions")
+      .select("id")
+      .limit(1)
+      .catch(() => ({ error: { message: "Table does not exist" } }));
+
+    if (transactionCheckError) {
+      console.log("Transactions table doesn't exist, creating sample transactions in orders table");
+      
+      // Let's add transaction_id, transaction_status, and sync_status to existing orders
+      for (const order of orders) {
+        const transactionId = `TRX-${Math.floor(Math.random() * 10000)}`;
+        const randomStatus = ["pending", "completed", "failed"][Math.floor(Math.random() * 3)];
+        const syncStatus = ["pending", "synced", "failed"][Math.floor(Math.random() * 3)];
+        
+        const { error: updateError } = await supabase
+          .from("orders")
+          .update({ 
+            notes: `Transaction ID: ${transactionId}, Status: ${randomStatus}, Sync: ${syncStatus}` 
+          })
+          .eq("id", order.id);
+          
+        if (updateError) throw updateError;
+      }
+    } else {
+      // If transactions table exists, create actual transaction records
+      for (const order of orders) {
+        const transactionData = {
+          order_id: order.id,
+          customer_id: order.customer_id,
+          amount: order.total_amount,
+          transaction_id: `TRX-${Math.floor(Math.random() * 10000)}`,
+          status: ["pending", "completed", "failed"][Math.floor(Math.random() * 3)],
+          sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
+          payment_method: ["cash", "credit_card", "bank_transfer"][Math.floor(Math.random() * 3)],
+          transaction_date: new Date().toISOString()
+        };
+        
+        const { error: insertError } = await supabase
+          .from("transactions")
+          .insert(transactionData);
+          
+        if (insertError) throw insertError;
+      }
+    }
+    
+    setProgress(80);
+    return "Transactions generated successfully";
+  };
+
+  const generateSyncData = async () => {
+    // Create some dummy sync status data
+    const lastSync = new Date();
+    lastSync.setHours(lastSync.getHours() - Math.floor(Math.random() * 24));
+    
+    // Store sync data in localStorage (for demo purposes)
+    localStorage.setItem('syncStatus', JSON.stringify({
+      last_sync: lastSync.toISOString(),
+      pending_uploads: Math.floor(Math.random() * 5),
+      pending_downloads: Math.floor(Math.random() * 3),
+      sync_history: [
+        {
+          timestamp: lastSync.toISOString(),
+          status: "success",
+          items_synced: Math.floor(Math.random() * 20) + 5
+        },
+        {
+          timestamp: new Date(lastSync.getTime() - 1000 * 60 * 60 * 3).toISOString(),
+          status: "partial",
+          items_synced: Math.floor(Math.random() * 10) + 2,
+          error: "Network timeout on 3 items"
+        },
+        {
+          timestamp: new Date(lastSync.getTime() - 1000 * 60 * 60 * 24).toISOString(),
+          status: "success",
+          items_synced: Math.floor(Math.random() * 15) + 10
+        }
+      ]
+    }));
+    
+    setProgress(100);
+    return "Sync data generated successfully";
   };
 
   const handleGenerateAll = async () => {
@@ -303,8 +400,8 @@ const GenerateDummyData = () => {
       await generateProducts();
       await generateRoutes();
       await generateOrders();
-      
-      setProgress(100);
+      await generateTransactions();
+      await generateSyncData();
       
       toast({
         title: "Success",
@@ -333,7 +430,7 @@ const GenerateDummyData = () => {
         <CardHeader>
           <CardTitle>Generate Dummy Data</CardTitle>
           <CardDescription>
-            Create sample customers, products, routes, and orders for testing.
+            Create sample customers, products, routes, orders and transactions for testing.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -345,6 +442,8 @@ const GenerateDummyData = () => {
             <li>7 products with different categories</li>
             <li>A route for today with customer stops</li>
             <li>Sample orders with multiple products</li>
+            <li>Transaction records with sync status</li>
+            <li>Sync history data for testing</li>
           </ul>
           
           {progress > 0 && (
