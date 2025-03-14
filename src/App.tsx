@@ -14,6 +14,7 @@ import Orders from "@/pages/Orders";
 import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
+import GenerateDummyData from "@/pages/GenerateDummyData";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +34,8 @@ const App = () => (
               <Route path="customers" element={<Customers />} />
               <Route path="products" element={<Products />} />
               <Route path="orders" element={<Orders />} />
-              <Route path="routes" element={<RoutesPage />} /> {/* Updated to use the renamed import */}
+              <Route path="routes" element={<RoutesPage />} /> {/* Using the renamed import */}
+              <Route path="dummy-data" element={<GenerateDummyData />} />
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>
             

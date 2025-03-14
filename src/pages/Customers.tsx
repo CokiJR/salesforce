@@ -38,7 +38,14 @@ const Customers = () => {
         .order("name");
 
       if (error) throw error;
-      setCustomers(data || []);
+      
+      // Convert the raw data to match the Customer type
+      const typedCustomers = data?.map(customer => ({
+        ...customer,
+        status: customer.status as "active" | "inactive"
+      })) || [];
+      
+      setCustomers(typedCustomers);
     } catch (error: any) {
       console.error("Error fetching customers:", error.message);
       toast({

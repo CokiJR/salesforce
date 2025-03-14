@@ -40,7 +40,29 @@ const Orders = () => {
         .order("order_date", { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      // Convert the raw data to match the Order type by fetching items
+      const ordersWithItems = await Promise.all(data?.map(async (order) => {
+        const { data: items } = await supabase
+          .from("order_items")
+          .select(`
+            *,
+            product:products(*)
+          `)
+          .eq("order_id", order.id);
+        
+        return {
+          ...order,
+          status: order.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
+          payment_status: order.payment_status as "unpaid" | "partial" | "paid",
+          items: items?.map(item => ({
+            ...item,
+            product: item.product
+          })) || []
+        };
+      }) || []);
+      
+      setOrders(ordersWithItems);
     } catch (error: any) {
       console.error("Error fetching orders:", error.message);
       toast({

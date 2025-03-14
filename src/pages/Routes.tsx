@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { DailyRoute } from "@/types";
+import { DailyRoute, RouteStop } from "@/types";
 import { 
   Table, 
   TableHeader, 
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const Routes = () => {
+const RoutesPage = () => {
   const [routes, setRoutes] = useState<DailyRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<Date>(new Date());
@@ -39,13 +39,38 @@ const Routes = () => {
     try {
       setLoading(true);
       const formattedDate = format(date, "yyyy-MM-dd");
-      const { data, error } = await supabase
+      const { data: routesData, error: routesError } = await supabase
         .from("daily_routes")
         .select("*")
         .eq("date", formattedDate);
 
-      if (error) throw error;
-      setRoutes(data || []);
+      if (routesError) throw routesError;
+
+      // Fetch stops for each route
+      const routesWithStops = await Promise.all(routesData?.map(async (route) => {
+        const { data: stopsData, error: stopsError } = await supabase
+          .from("route_stops")
+          .select(`
+            *,
+            customer:customers(*)
+          `)
+          .eq("route_id", route.id);
+
+        if (stopsError) throw stopsError;
+
+        const stops: RouteStop[] = stopsData?.map(stop => ({
+          ...stop,
+          customer: stop.customer,
+          status: stop.status as "pending" | "completed" | "skipped"
+        })) || [];
+
+        return {
+          ...route,
+          stops
+        };
+      }) || []);
+      
+      setRoutes(routesWithStops);
     } catch (error: any) {
       console.error("Error fetching routes:", error.message);
       toast({
@@ -177,4 +202,4 @@ const Routes = () => {
   );
 };
 
-export default Routes;
+export default RoutesPage;
