@@ -11,7 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
 import Products from "@/pages/Products";
 import Orders from "@/pages/Orders";
-import Routes from "@/pages/Routes";
+import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
 
@@ -33,7 +33,7 @@ const App = () => (
               <Route path="customers" element={<Customers />} />
               <Route path="products" element={<Products />} />
               <Route path="orders" element={<Orders />} />
-              <Route path="routes" element={<Routes />} />
+              <Route path="routes" element={<RoutesPage />} /> {/* Updated to use the renamed import */}
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>
             

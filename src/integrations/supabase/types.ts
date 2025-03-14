@@ -9,6 +9,194 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string
+          city: string
+          contact_person: string
+          created_at: string
+          email: string | null
+          id: string
+          location: Json | null
+          name: string
+          phone: string
+          status: string
+        }
+        Insert: {
+          address: string
+          city: string
+          contact_person: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          location?: Json | null
+          name: string
+          phone: string
+          status: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          contact_person?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          location?: Json | null
+          name?: string
+          phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      daily_routes: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          salesperson_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          salesperson_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          salesperson_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          price: number
+          product_id: string
+          quantity: number
+          total: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          price: number
+          product_id: string
+          quantity: number
+          total: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          price?: number
+          product_id?: string
+          quantity?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          delivery_date: string
+          id: string
+          notes: string | null
+          order_date: string
+          payment_status: string
+          salesperson_id: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          delivery_date: string
+          id?: string
+          notes?: string | null
+          order_date?: string
+          payment_status: string
+          salesperson_id: string
+          status: string
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          delivery_date?: string
+          id?: string
+          notes?: string | null
+          order_date?: string
+          payment_status?: string
+          salesperson_id?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          sku: string
+          stock: number
+          unit: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          sku: string
+          stock?: number
+          unit: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          sku?: string
+          stock?: number
+          unit?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +223,51 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      route_stops: {
+        Row: {
+          customer_id: string
+          id: string
+          notes: string | null
+          route_id: string
+          status: string
+          visit_date: string
+          visit_time: string
+        }
+        Insert: {
+          customer_id: string
+          id?: string
+          notes?: string | null
+          route_id: string
+          status: string
+          visit_date: string
+          visit_time: string
+        }
+        Update: {
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          route_id?: string
+          status?: string
+          visit_date?: string
+          visit_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_stops_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "daily_routes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
