@@ -1,9 +1,13 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuthentication";
+import AppShell from "@/components/layout/AppShell";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,11 +18,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<AppShell />}>
+              <Route index element={<Dashboard />} />
+              <Route path="customers" element={<div className="p-4 animate-fade-in">Customers page coming soon</div>} />
+              <Route path="products" element={<div className="p-4 animate-fade-in">Products page coming soon</div>} />
+              <Route path="orders" element={<div className="p-4 animate-fade-in">Orders page coming soon</div>} />
+              <Route path="routes" element={<div className="p-4 animate-fade-in">Routes page coming soon</div>} />
+              <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
