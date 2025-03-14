@@ -8,6 +8,10 @@ import { AuthProvider } from "@/hooks/useAuthentication";
 import AppShell from "@/components/layout/AppShell";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Customers from "@/pages/Customers";
+import Products from "@/pages/Products";
+import Orders from "@/pages/Orders";
+import Routes from "@/pages/Routes";
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
 
@@ -26,10 +30,10 @@ const App = () => (
             
             <Route path="/dashboard" element={<AppShell />}>
               <Route index element={<Dashboard />} />
-              <Route path="customers" element={<div className="p-4 animate-fade-in">Customers page coming soon</div>} />
-              <Route path="products" element={<div className="p-4 animate-fade-in">Products page coming soon</div>} />
-              <Route path="orders" element={<div className="p-4 animate-fade-in">Orders page coming soon</div>} />
-              <Route path="routes" element={<div className="p-4 animate-fade-in">Routes page coming soon</div>} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="products" element={<Products />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="routes" element={<Routes />} />
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>
             
