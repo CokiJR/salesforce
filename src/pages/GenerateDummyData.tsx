@@ -263,7 +263,7 @@ const GenerateDummyData = () => {
       for (let i = 0; i < numProducts; i++) {
         const product = products[i % products.length];
         const quantity = Math.floor(Math.random() * 5) + 1;
-        const price = parseFloat(product.price);
+        const price = Number(product.price); // Convert to number explicitly
         const total = price * quantity;
         totalAmount += total;
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { DailyRoute, RouteStop } from "@/types";
+import { DailyRoute, RouteStop, Customer } from "@/types";
 import { 
   Table, 
   TableHeader, 
@@ -58,11 +58,35 @@ const RoutesPage = () => {
 
         if (stopsError) throw stopsError;
 
-        const stops: RouteStop[] = stopsData?.map(stop => ({
-          ...stop,
-          customer: stop.customer,
-          status: stop.status as "pending" | "completed" | "skipped"
-        })) || [];
+        const stops: RouteStop[] = stopsData?.map(stop => {
+          // Create a properly typed customer object
+          const customerData = stop.customer;
+          const typedCustomer: Customer = {
+            id: customerData.id,
+            name: customerData.name,
+            address: customerData.address,
+            city: customerData.city,
+            phone: customerData.phone,
+            email: customerData.email || "",
+            contact_person: customerData.contact_person,
+            status: customerData.status as "active" | "inactive",
+            created_at: customerData.created_at,
+            location: customerData.location ? {
+              lat: Number((customerData.location as any).lat || 0),
+              lng: Number((customerData.location as any).lng || 0)
+            } : undefined
+          };
+          
+          return {
+            id: stop.id,
+            customer_id: stop.customer_id,
+            customer: typedCustomer,
+            visit_date: stop.visit_date,
+            visit_time: stop.visit_time,
+            status: stop.status as "pending" | "completed" | "skipped",
+            notes: stop.notes || ""
+          };
+        }) || [];
 
         return {
           ...route,

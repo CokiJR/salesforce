@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Order } from "@/types";
+import { Order, Customer, OrderItem } from "@/types";
 import { 
   Table, 
   TableHeader, 
@@ -35,7 +35,7 @@ const Orders = () => {
         .from("orders")
         .select(`
           *,
-          customer:customers(name)
+          customer:customers(*)
         `)
         .order("order_date", { ascending: false });
 
@@ -51,15 +51,40 @@ const Orders = () => {
           `)
           .eq("order_id", order.id);
         
-        return {
+        // Create a properly typed order object
+        const typedOrder: Order = {
           ...order,
           status: order.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
           payment_status: order.payment_status as "unpaid" | "partial" | "paid",
+          // Create a fully typed customer object from the fetched data
+          customer: {
+            id: order.customer.id,
+            name: order.customer.name,
+            address: order.customer.address,
+            city: order.customer.city,
+            phone: order.customer.phone,
+            email: order.customer.email || "",
+            contact_person: order.customer.contact_person,
+            status: order.customer.status as "active" | "inactive",
+            created_at: order.customer.created_at,
+            location: order.customer.location ? {
+              lat: Number((order.customer.location as any).lat || 0),
+              lng: Number((order.customer.location as any).lng || 0)
+            } : undefined
+          },
+          // Create properly typed order items
           items: items?.map(item => ({
-            ...item,
+            id: item.id,
+            order_id: item.order_id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.total,
             product: item.product
           })) || []
         };
+        
+        return typedOrder;
       }) || []);
       
       setOrders(ordersWithItems);

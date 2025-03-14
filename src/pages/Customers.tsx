@@ -40,9 +40,14 @@ const Customers = () => {
       if (error) throw error;
       
       // Convert the raw data to match the Customer type
-      const typedCustomers = data?.map(customer => ({
+      const typedCustomers: Customer[] = data?.map(customer => ({
         ...customer,
-        status: customer.status as "active" | "inactive"
+        status: customer.status as "active" | "inactive",
+        // Convert JSON location to the expected format if it exists
+        location: customer.location ? {
+          lat: Number((customer.location as any).lat || 0),
+          lng: Number((customer.location as any).lng || 0)
+        } : undefined
       })) || [];
       
       setCustomers(typedCustomers);
