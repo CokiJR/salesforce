@@ -3,11 +3,14 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
 }
@@ -17,29 +20,10 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   signIn: async () => {},
+  signUp: async () => {},
   signOut: async () => {},
   isAdmin: false,
 });
-
-// Mock data for development until Supabase is integrated
-const MOCK_USERS = [
-  {
-    id: "1",
-    email: "admin@example.com",
-    full_name: "Admin User",
-    role: "admin",
-    password: "admin123",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    email: "sales@example.com",
-    full_name: "Sales User",
-    role: "sales",
-    password: "sales123",
-    created_at: new Date().toISOString(),
-  },
-];
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,56 +31,109 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const handleSession = async (session: Session | null) => {
+    if (session) {
+      try {
+        // Fetch the user profile from our profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) throw error;
+
+        // Set the user with data from both auth and profiles
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          full_name: profile.full_name || '',
+          role: profile.role as "admin" | "sales",
+          created_at: profile.created_at,
+        });
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    } else {
+      setUser(null);
+    }
+    setIsLoading(false);
+  };
+
   // Check for existing session on initial load
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const storedUser = localStorage.getItem("salesforce_user");
-        
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        console.error("Session check error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
 
-    checkSession();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        handleSession(session);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      // This would be replaced with actual Supabase auth
-      const foundUser = MOCK_USERS.find(
-        (u) => u.email === email && u.password === password
-      );
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (foundUser) {
-        // Remove password before storing
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword as User);
-        localStorage.setItem("salesforce_user", JSON.stringify(userWithoutPassword));
-        
-        toast({
-          title: "Welcome back!",
-          description: `You are now signed in as ${foundUser.full_name}.`,
-        });
-        
-        return;
-      }
-      
-      throw new Error("Invalid email or password");
-    } catch (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You are now signed in.",
+      });
+    } catch (error: any) {
       console.error("Sign in error:", error);
       toast({
         variant: "destructive",
         title: "Authentication failed",
-        description: "Invalid email or password. Please try again.",
+        description: error?.message || "Invalid email or password. Please try again.",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email for a confirmation link.",
+      });
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error?.message || "Could not create account. Please try again.",
       });
       throw error;
     } finally {
@@ -106,9 +143,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      // This would be replaced with actual Supabase auth
-      setUser(null);
-      localStorage.removeItem("salesforce_user");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;
@@ -118,7 +154,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAdmin = user?.role === "admin";
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,7 +10,7 @@ const Index = () => {
   useEffect(() => {
     // Redirect based on authentication status
     if (user) {
-      navigate("/");
+      navigate("/dashboard");
     } else {
       navigate("/login");
     }

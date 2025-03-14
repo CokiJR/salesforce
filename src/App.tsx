@@ -9,6 +9,7 @@ import AppShell from "@/components/layout/AppShell";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import Index from "@/pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +21,10 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             
-            <Route path="/" element={<AppShell />}>
+            <Route path="/dashboard" element={<AppShell />}>
               <Route index element={<Dashboard />} />
               <Route path="customers" element={<div className="p-4 animate-fade-in">Customers page coming soon</div>} />
               <Route path="products" element={<div className="p-4 animate-fade-in">Products page coming soon</div>} />
