@@ -61,10 +61,21 @@ const Transactions = () => {
 
       if (error) throw error;
       
-      const formattedData = data?.map(item => ({
+      // Transform the data to match our Transaction interface
+      const formattedData: Transaction[] = data?.map(item => ({
         ...item,
         customer_name: item.customer?.name || "Unknown Customer",
         order_id: item.order?.id || null,
+        // Ensure these fields are included to match the Transaction interface
+        id: item.id,
+        customer_id: item.customer_id,
+        amount: item.amount,
+        transaction_id: item.transaction_id,
+        status: item.status,
+        sync_status: item.sync_status,
+        payment_method: item.payment_method as "cash" | "credit_card" | "bank_transfer",
+        transaction_date: item.transaction_date,
+        created_at: item.created_at
       })) || [];
       
       setTransactions(formattedData);
