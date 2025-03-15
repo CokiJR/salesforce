@@ -122,6 +122,7 @@ export type Database = {
           payment_status: string
           salesperson_id: string
           status: string
+          sync_status: string | null
           total_amount: number
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           payment_status: string
           salesperson_id: string
           status: string
+          sync_status?: string | null
           total_amount?: number
         }
         Update: {
@@ -146,6 +148,7 @@ export type Database = {
           payment_status?: string
           salesperson_id?: string
           status?: string
+          sync_status?: string | null
           total_amount?: number
         }
         Relationships: [
@@ -265,6 +268,60 @@ export type Database = {
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "daily_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          id: string
+          order_id: string | null
+          payment_method: string
+          status: string
+          sync_status: string
+          transaction_date: string
+          transaction_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method: string
+          status?: string
+          sync_status?: string
+          transaction_date?: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string
+          status?: string
+          sync_status?: string
+          transaction_date?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]

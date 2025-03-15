@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { Transaction } from "@/types";
 
 const GenerateDummyData = () => {
   const [loading, setLoading] = useState(false);
@@ -304,53 +304,39 @@ const GenerateDummyData = () => {
     if (ordersFetchError) throw ordersFetchError;
     if (!orders?.length) throw new Error("No orders found");
 
-    // Create a transactions table if it doesn't exist yet
-    // This would be normally done via SQL migrations, but for this demo
-    // we'll check if it exists and create it if needed
-    const { error: transactionCheckError } = await supabase
-      .from("transactions")
-      .select("id")
-      .limit(1)
-      .catch(() => ({ error: { message: "Table does not exist" } }));
-
-    if (transactionCheckError) {
-      console.log("Transactions table doesn't exist, creating sample transactions in orders table");
+    // Create transactions for orders
+    for (const order of orders) {
+      const transactionData = {
+        order_id: order.id,
+        customer_id: order.customer_id,
+        amount: order.total_amount,
+        transaction_id: `TRX-${Math.floor(Math.random() * 10000)}`,
+        status: ["pending", "completed", "failed"][Math.floor(Math.random() * 3)],
+        sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
+        payment_method: ["cash", "credit_card", "bank_transfer"][Math.floor(Math.random() * 3)],
+        transaction_date: new Date().toISOString()
+      };
       
-      // Let's add transaction_id, transaction_status, and sync_status to existing orders
-      for (const order of orders) {
-        const transactionId = `TRX-${Math.floor(Math.random() * 10000)}`;
-        const randomStatus = ["pending", "completed", "failed"][Math.floor(Math.random() * 3)];
-        const syncStatus = ["pending", "synced", "failed"][Math.floor(Math.random() * 3)];
+      // Insert into transactions table
+      const { error: insertError } = await supabase
+        .from("transactions")
+        .insert(transactionData);
         
-        const { error: updateError } = await supabase
-          .from("orders")
-          .update({ 
-            notes: `Transaction ID: ${transactionId}, Status: ${randomStatus}, Sync: ${syncStatus}` 
-          })
-          .eq("id", order.id);
-          
-        if (updateError) throw updateError;
+      if (insertError) {
+        console.error("Error inserting transaction:", insertError);
+        throw insertError;
       }
-    } else {
-      // If transactions table exists, create actual transaction records
-      for (const order of orders) {
-        const transactionData = {
-          order_id: order.id,
-          customer_id: order.customer_id,
-          amount: order.total_amount,
-          transaction_id: `TRX-${Math.floor(Math.random() * 10000)}`,
-          status: ["pending", "completed", "failed"][Math.floor(Math.random() * 3)],
+      
+      // Update the order with a sync_status
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ 
           sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
-          payment_method: ["cash", "credit_card", "bank_transfer"][Math.floor(Math.random() * 3)],
-          transaction_date: new Date().toISOString()
-        };
+          notes: `${order.notes || ''} Transaction ID: ${transactionData.transaction_id}`
+        })
+        .eq("id", order.id);
         
-        const { error: insertError } = await supabase
-          .from("transactions")
-          .insert(transactionData);
-          
-        if (insertError) throw insertError;
-      }
+      if (updateError) throw updateError;
     }
     
     setProgress(80);

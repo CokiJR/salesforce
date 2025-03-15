@@ -56,6 +56,7 @@ export interface Order {
   notes: string;
   items: OrderItem[];
   created_at: string;
+  sync_status?: string;
 }
 
 export interface RouteStop {
@@ -80,4 +81,17 @@ export interface SyncStatus {
   last_sync: string;
   pending_uploads: number;
   pending_downloads: number;
+}
+
+export interface Transaction {
+  id: string;
+  order_id: string;
+  customer_id: string;
+  transaction_id: string;
+  amount: number;
+  status: "pending" | "completed" | "failed";
+  sync_status: "pending" | "synced" | "failed";
+  payment_method: "cash" | "credit_card" | "bank_transfer";
+  transaction_date: string;
+  created_at: string;
 }
