@@ -160,11 +160,9 @@ const GenerateDummyData = () => {
   };
 
   const generateRoutes = async () => {
-    // Get the current user ID
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    // Get all customers for creating stops
     const { data: customers } = await supabase
       .from("customers")
       .select("id")
@@ -172,7 +170,6 @@ const GenerateDummyData = () => {
 
     if (!customers?.length) throw new Error("No customers found");
 
-    // Create a route for today
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0];
 
@@ -189,9 +186,8 @@ const GenerateDummyData = () => {
 
     const routeId = routeData[0].id;
 
-    // Create stops for each customer
     const stops = customers.map((customer, index) => {
-      const hour = 9 + index; // 9 AM, 10 AM, etc.
+      const hour = 9 + index;
       return {
         route_id: routeId,
         customer_id: customer.id,
@@ -212,11 +208,9 @@ const GenerateDummyData = () => {
   };
 
   const generateOrders = async () => {
-    // Get the current user ID
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    // Get all customers
     const { data: customers } = await supabase
       .from("customers")
       .select("id")
@@ -224,7 +218,6 @@ const GenerateDummyData = () => {
 
     if (!customers?.length) throw new Error("No customers found");
 
-    // Get all products
     const { data: products } = await supabase
       .from("products")
       .select("id, price")
@@ -232,13 +225,11 @@ const GenerateDummyData = () => {
 
     if (!products?.length) throw new Error("No products found");
 
-    // Create orders for each customer
     const today = new Date();
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
 
     for (const customer of customers) {
-      // Create an order
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -256,18 +247,16 @@ const GenerateDummyData = () => {
 
       const orderId = orderData[0].id;
 
-      // Add 2-3 random products to the order
       const numProducts = Math.floor(Math.random() * 2) + 2;
       let totalAmount = 0;
 
       for (let i = 0; i < numProducts; i++) {
         const product = products[i % products.length];
         const quantity = Math.floor(Math.random() * 5) + 1;
-        const price = Number(product.price); // Convert to number explicitly
+        const price = Number(product.price);
         const total = price * quantity;
         totalAmount += total;
 
-        // Add order item
         const { error: itemError } = await supabase
           .from("order_items")
           .insert({
@@ -281,7 +270,6 @@ const GenerateDummyData = () => {
         if (itemError) throw itemError;
       }
 
-      // Update order total
       const { error: updateError } = await supabase
         .from("orders")
         .update({ total_amount: totalAmount })
@@ -295,29 +283,26 @@ const GenerateDummyData = () => {
   };
 
   const generateTransactions = async () => {
-    // Get the orders we created
     const { data: orders, error: ordersFetchError } = await supabase
       .from("orders")
-      .select("id, customer_id, total_amount")
+      .select("id, customer_id, total_amount, notes")
       .limit(5);
 
     if (ordersFetchError) throw ordersFetchError;
     if (!orders?.length) throw new Error("No orders found");
 
-    // Create transactions for orders
     for (const order of orders) {
       const transactionData = {
         order_id: order.id,
         customer_id: order.customer_id,
         amount: order.total_amount,
         transaction_id: `TRX-${Math.floor(Math.random() * 10000)}`,
-        status: ["pending", "completed", "failed"][Math.floor(Math.random() * 3)],
-        sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
-        payment_method: ["cash", "credit_card", "bank_transfer"][Math.floor(Math.random() * 3)],
+        status: ["pending", "completed", "failed"][Math.floor(Math.random() * 3)] as "pending" | "completed" | "failed",
+        sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)] as "pending" | "synced" | "failed",
+        payment_method: ["cash", "credit_card", "bank_transfer"][Math.floor(Math.random() * 3)] as "cash" | "credit_card" | "bank_transfer",
         transaction_date: new Date().toISOString()
       };
       
-      // Insert into transactions table
       const { error: insertError } = await supabase
         .from("transactions")
         .insert(transactionData);
@@ -327,13 +312,17 @@ const GenerateDummyData = () => {
         throw insertError;
       }
       
-      // Update the order with a sync_status
+      const updateData: { 
+        sync_status: string, 
+        notes: string 
+      } = { 
+        sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
+        notes: `${order.notes || ''} Transaction ID: ${transactionData.transaction_id}`
+      };
+      
       const { error: updateError } = await supabase
         .from("orders")
-        .update({ 
-          sync_status: ["pending", "synced", "failed"][Math.floor(Math.random() * 3)],
-          notes: `${order.notes || ''} Transaction ID: ${transactionData.transaction_id}`
-        })
+        .update(updateData)
         .eq("id", order.id);
         
       if (updateError) throw updateError;
@@ -344,11 +333,9 @@ const GenerateDummyData = () => {
   };
 
   const generateSyncData = async () => {
-    // Create some dummy sync status data
     const lastSync = new Date();
     lastSync.setHours(lastSync.getHours() - Math.floor(Math.random() * 24));
     
-    // Store sync data in localStorage (for demo purposes)
     localStorage.setItem('syncStatus', JSON.stringify({
       last_sync: lastSync.toISOString(),
       pending_uploads: Math.floor(Math.random() * 5),
@@ -394,7 +381,6 @@ const GenerateDummyData = () => {
         description: "Dummy data generated successfully!",
       });
 
-      // Navigate to the orders page after a delay
       setTimeout(() => {
         navigate("/dashboard/orders");
       }, 1500);
