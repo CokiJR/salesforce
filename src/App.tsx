@@ -15,7 +15,13 @@ import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
 import Transactions from "@/pages/Transactions";
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
-import GenerateDummyData from "@/pages/GenerateDummyData";
+
+// Import the new add/create page components
+import AddCustomer from "@/pages/customers/AddCustomer";
+import AddProduct from "@/pages/products/AddProduct";
+import AddOrder from "@/pages/orders/AddOrder";
+import CreateRoute from "@/pages/routes/CreateRoute";
+import AddTransaction from "@/pages/transactions/AddTransaction";
 
 const queryClient = new QueryClient();
 
@@ -32,12 +38,27 @@ const App = () => (
             
             <Route path="/dashboard" element={<AppShell />}>
               <Route index element={<Dashboard />} />
+              
               <Route path="customers" element={<Customers />} />
+              <Route path="customers/:id" element={<div className="p-4 animate-fade-in">Customer details coming soon</div>} />
+              <Route path="customers/add" element={<AddCustomer />} />
+              
               <Route path="products" element={<Products />} />
+              <Route path="products/:id" element={<div className="p-4 animate-fade-in">Product details coming soon</div>} />
+              <Route path="products/add" element={<AddProduct />} />
+              
               <Route path="orders" element={<Orders />} />
+              <Route path="orders/:id" element={<div className="p-4 animate-fade-in">Order details coming soon</div>} />
+              <Route path="orders/add" element={<AddOrder />} />
+              
               <Route path="routes" element={<RoutesPage />} />
+              <Route path="routes/:id" element={<div className="p-4 animate-fade-in">Route details coming soon</div>} />
+              <Route path="routes/create" element={<CreateRoute />} />
+              
               <Route path="transactions" element={<Transactions />} />
-              <Route path="dummy-data" element={<GenerateDummyData />} />
+              <Route path="transactions/:id" element={<div className="p-4 animate-fade-in">Transaction details coming soon</div>} />
+              <Route path="transactions/add" element={<AddTransaction />} />
+              
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>
             

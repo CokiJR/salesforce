@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link, Outlet } from "react-router-dom";
 import {
@@ -28,7 +27,6 @@ import {
   Upload,
   Download,
   CreditCard,
-  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -190,14 +188,6 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/dummy-data" className="flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    <span>Generate Data</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
