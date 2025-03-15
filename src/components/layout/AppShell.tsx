@@ -117,7 +117,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="flex h-14 items-center border-b px-6">
-        <Link to="/" className="flex items-center gap-2 font-semibold">
+        <Link to="/dashboard" className="flex items-center gap-2 font-semibold">
           <div className="rounded-md bg-sales-600 p-1">
             <BarChart3 className="h-5 w-5 text-white" />
           </div>
@@ -132,7 +132,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/" className="flex items-center gap-2">
+                  <Link to="/dashboard" className="flex items-center gap-2">
                     <Home className="h-5 w-5" />
                     <span>Dashboard</span>
                   </Link>
@@ -140,7 +140,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/customers" className="flex items-center gap-2">
+                  <Link to="/dashboard/customers" className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
                     <span>Customers</span>
                   </Link>
@@ -148,7 +148,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/products" className="flex items-center gap-2">
+                  <Link to="/dashboard/products" className="flex items-center gap-2">
                     <Package className="h-5 w-5" />
                     <span>Products</span>
                   </Link>
@@ -156,7 +156,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/orders" className="flex items-center gap-2">
+                  <Link to="/dashboard/orders" className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />
                     <span>Orders</span>
                   </Link>
@@ -164,7 +164,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/routes" className="flex items-center gap-2">
+                  <Link to="/dashboard/routes" className="flex items-center gap-2">
                     <Map className="h-5 w-5" />
                     <span>Routes</span>
                   </Link>
@@ -173,7 +173,7 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               {user?.role === "admin" && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <Link to="/admin" className="flex items-center gap-2">
+                    <Link to="/dashboard/admin" className="flex items-center gap-2">
                       <UserCog className="h-5 w-5" />
                       <span>Admin</span>
                     </Link>
