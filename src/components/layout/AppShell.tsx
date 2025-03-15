@@ -27,6 +27,8 @@ import {
   RefreshCw,
   Upload,
   Download,
+  CreditCard,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,6 +166,14 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
+                  <Link to="/dashboard/transactions" className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Transactions</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
                   <Link to="/dashboard/routes" className="flex items-center gap-2">
                     <Map className="h-5 w-5" />
                     <span>Routes</span>
@@ -180,6 +190,14 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/dashboard/dummy-data" className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    <span>Generate Data</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

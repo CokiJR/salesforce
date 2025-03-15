@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -85,10 +84,11 @@ export interface SyncStatus {
 
 export interface Transaction {
   id: string;
-  order_id: string;
-  customer_id: string;
-  transaction_id: string;
+  order_id: string | null;
+  customer_id: string | null;
+  customer_name?: string;
   amount: number;
+  transaction_id: string;
   status: "pending" | "completed" | "failed";
   sync_status: "pending" | "synced" | "failed";
   payment_method: "cash" | "credit_card" | "bank_transfer";

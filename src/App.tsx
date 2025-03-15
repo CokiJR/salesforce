@@ -12,6 +12,7 @@ import Customers from "@/pages/Customers";
 import Products from "@/pages/Products";
 import Orders from "@/pages/Orders";
 import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
+import Transactions from "@/pages/Transactions";
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
 import GenerateDummyData from "@/pages/GenerateDummyData";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="products" element={<Products />} />
               <Route path="orders" element={<Orders />} />
               <Route path="routes" element={<RoutesPage />} />
+              <Route path="transactions" element={<Transactions />} />
               <Route path="dummy-data" element={<GenerateDummyData />} />
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>
