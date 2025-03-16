@@ -46,7 +46,8 @@ export default function AddCustomer() {
     try {
       setIsSubmitting(true);
       
-      // Add created_at timestamp
+      // Add created_at timestamp to the data object
+      // Note: Since we've validated with Zod, all required fields are guaranteed to exist
       const customerData = {
         ...data,
         created_at: new Date().toISOString(),
