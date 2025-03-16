@@ -31,7 +31,8 @@ const Transactions = () => {
     syncFilter
   );
 
-  const hasFilters = searchQuery || statusFilter !== "all" || syncFilter !== "all";
+  // Fix the issue by ensuring hasFilters is always a boolean
+  const hasFilters = searchQuery !== "" || statusFilter !== "all" || syncFilter !== "all";
 
   return (
     <div className="space-y-4 animate-fade-in">
