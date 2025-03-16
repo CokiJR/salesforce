@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -45,13 +46,20 @@ export default function AddCustomer() {
     try {
       setIsSubmitting(true);
       
-      // Since the data has been validated by Zod, we can be sure all required fields are present
+      // Create a customerData object with the shape expected by Supabase
+      // Important: data is already validated by Zod so all required fields are present
       const customerData = {
-        ...data,
+        name: data.name,
+        contact_person: data.contact_person,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        status: data.status,
         created_at: new Date().toISOString(),
       };
       
-      // Now the customerData has all required fields for the Supabase table
+      // Now the customerData has all required fields explicitly defined
       const { data: newCustomer, error } = await supabase
         .from("customers")
         .insert(customerData)
