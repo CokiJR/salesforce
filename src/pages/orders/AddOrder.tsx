@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -101,7 +100,25 @@ export default function AddOrder() {
           .order("name");
         
         if (customersError) throw customersError;
-        setCustomers(customersData || []);
+        
+        // Convert the raw data to properly typed Customer objects
+        const typedCustomers: Customer[] = customersData?.map(customer => ({
+          id: customer.id,
+          name: customer.name,
+          address: customer.address,
+          city: customer.city,
+          phone: customer.phone,
+          email: customer.email || "",
+          contact_person: customer.contact_person,
+          status: customer.status as "active" | "inactive",
+          created_at: customer.created_at,
+          location: customer.location ? {
+            lat: Number((customer.location as any).lat || 0),
+            lng: Number((customer.location as any).lng || 0)
+          } : undefined
+        })) || [];
+        
+        setCustomers(typedCustomers);
 
         // Fetch products
         const { data: productsData, error: productsError } = await supabase

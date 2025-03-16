@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -40,7 +39,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Calendar as CalendarIcon, Loader2, MapPin, Plus, Trash2 } from "lucide-react";
@@ -91,7 +89,25 @@ export default function CreateRoute() {
           .order("name");
         
         if (error) throw error;
-        setCustomers(data || []);
+        
+        // Convert the raw data to properly typed Customer objects
+        const typedCustomers: Customer[] = data?.map(customer => ({
+          id: customer.id,
+          name: customer.name,
+          address: customer.address,
+          city: customer.city,
+          phone: customer.phone,
+          email: customer.email || "",
+          contact_person: customer.contact_person,
+          status: customer.status as "active" | "inactive",
+          created_at: customer.created_at,
+          location: customer.location ? {
+            lat: Number((customer.location as any).lat || 0),
+            lng: Number((customer.location as any).lng || 0)
+          } : undefined
+        })) || [];
+        
+        setCustomers(typedCustomers);
       } catch (error: any) {
         console.error("Error fetching customers:", error.message);
         toast({
@@ -427,3 +443,4 @@ export default function CreateRoute() {
     </div>
   );
 }
+
