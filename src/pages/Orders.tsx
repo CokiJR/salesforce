@@ -1,104 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Order, Customer, OrderItem } from "@/types";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableHead, 
-  TableRow, 
-  TableCell 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Search, ShoppingCart } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { useOrdersData } from "./orders/hooks/useOrdersData";
+import { formatCurrency, getStatusColor, getPaymentStatusColor } from "./orders/utils/orderUtils";
+import { OrdersHeader } from "./orders/components/OrdersHeader";
+import { OrderSearch } from "./orders/components/OrderSearch";
+import { OrdersTable } from "./orders/components/OrdersTable";
+import { EmptyOrdersState } from "./orders/components/EmptyOrdersState";
 
 const Orders = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
+  const { orders, loading } = useOrdersData();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          customer:customers(*)
-        `)
-        .order("order_date", { ascending: false });
-
-      if (error) throw error;
-      
-      // Convert the raw data to match the Order type by fetching items
-      const ordersWithItems = await Promise.all(data?.map(async (order) => {
-        const { data: items } = await supabase
-          .from("order_items")
-          .select(`
-            *,
-            product:products(*)
-          `)
-          .eq("order_id", order.id);
-        
-        // Create a properly typed order object
-        const typedOrder: Order = {
-          ...order,
-          status: order.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
-          payment_status: order.payment_status as "unpaid" | "partial" | "paid",
-          // Create a fully typed customer object from the fetched data
-          customer: {
-            id: order.customer.id,
-            name: order.customer.name,
-            address: order.customer.address,
-            city: order.customer.city,
-            phone: order.customer.phone,
-            email: order.customer.email || "",
-            contact_person: order.customer.contact_person,
-            status: order.customer.status as "active" | "inactive",
-            created_at: order.customer.created_at,
-            location: order.customer.location ? {
-              lat: Number((order.customer.location as any).lat || 0),
-              lng: Number((order.customer.location as any).lng || 0)
-            } : undefined
-          },
-          // Create properly typed order items
-          items: items?.map(item => ({
-            id: item.id,
-            order_id: item.order_id,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            total: item.total,
-            product: item.product
-          })) || []
-        };
-        
-        return typedOrder;
-      }) || []);
-      
-      setOrders(ordersWithItems);
-    } catch (error: any) {
-      console.error("Error fetching orders:", error.message);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to load orders: ${error.message}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddOrder = () => {
     navigate("/dashboard/orders/add");
@@ -114,122 +28,32 @@ const Orders = () => {
     order.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "confirmed":
-        return "bg-blue-100 text-blue-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "canceled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "unpaid":
-        return "bg-red-100 text-red-800";
-      case "partial":
-        return "bg-yellow-100 text-yellow-800";
-      case "paid":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-        <Button onClick={handleAddOrder}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Order
-        </Button>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search orders..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <OrdersHeader onAddOrder={handleAddOrder} />
+      
+      <OrderSearch 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+      />
 
       {loading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : filteredOrders.length > 0 ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow 
-                  key={order.id} 
-                  className="cursor-pointer hover:bg-muted/60"
-                  onClick={() => handleOrderDetails(order.id)}
-                >
-                  <TableCell className="font-medium">{order.id.substring(0, 8)}</TableCell>
-                  <TableCell>{order.customer?.name}</TableCell>
-                  <TableCell>{format(new Date(order.order_date), "MMM d, yyyy")}</TableCell>
-                  <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPaymentStatusColor(order.payment_status)}`}>
-                      {order.payment_status}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <OrdersTable 
+          orders={filteredOrders}
+          formatCurrency={formatCurrency}
+          getStatusColor={getStatusColor}
+          getPaymentStatusColor={getPaymentStatusColor}
+          onOrderClick={handleOrderDetails}
+        />
       ) : (
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="rounded-full bg-muted p-3">
-            <ShoppingCart className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-lg font-semibold">No orders found</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {searchQuery ? "Try a different search term" : "Get started by creating your first order"}
-          </p>
-          {!searchQuery && (
-            <Button onClick={handleAddOrder} className="mt-4">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Order
-            </Button>
-          )}
-        </div>
+        <EmptyOrdersState 
+          searchQuery={searchQuery} 
+          onAddOrder={handleAddOrder} 
+        />
       )}
     </div>
   );
