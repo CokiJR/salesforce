@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -46,14 +45,13 @@ export default function AddCustomer() {
     try {
       setIsSubmitting(true);
       
-      // Add created_at timestamp to the data object
-      // Note: Since we've validated with Zod, all required fields are guaranteed to exist
+      // Since the data has been validated by Zod, we can be sure all required fields are present
       const customerData = {
         ...data,
         created_at: new Date().toISOString(),
       };
       
-      // Insert customer into database
+      // Now the customerData has all required fields for the Supabase table
       const { data: newCustomer, error } = await supabase
         .from("customers")
         .insert(customerData)
