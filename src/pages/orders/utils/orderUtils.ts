@@ -1,11 +1,4 @@
 
-export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-};
-
 export const getStatusColor = (status: string) => {
   switch (status) {
     case "draft":
