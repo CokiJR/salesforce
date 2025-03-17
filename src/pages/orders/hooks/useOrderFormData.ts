@@ -9,8 +9,9 @@ export function useOrderFormData() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
+  // Fetch form data from Supabase
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFormData = async () => {
       setLoadingItems(true);
       try {
         // Fetch customers
@@ -32,6 +33,7 @@ export function useOrderFormData() {
           email: customer.email || "",
           contact_person: customer.contact_person,
           status: customer.status as "active" | "inactive",
+          cycle: customer.cycle || "YYYY", // Add cycle field
           created_at: customer.created_at,
           location: customer.location ? {
             lat: Number((customer.location as any).lat || 0),
@@ -39,8 +41,6 @@ export function useOrderFormData() {
           } : undefined
         })) || [];
         
-        setCustomers(typedCustomers);
-
         // Fetch products
         const { data: productsData, error: productsError } = await supabase
           .from("products")
@@ -48,20 +48,22 @@ export function useOrderFormData() {
           .order("name");
         
         if (productsError) throw productsError;
-        setProducts(productsData || []);
+        
+        setCustomers(typedCustomers);
+        setProducts(productsData as Product[]);
       } catch (error: any) {
-        console.error("Error fetching data:", error.message);
+        console.error("Error fetching form data:", error.message);
         toast({
           variant: "destructive",
           title: "Error",
-          description: `Failed to load data: ${error.message}`,
+          description: `Failed to load form data: ${error.message}`,
         });
       } finally {
         setLoadingItems(false);
       }
     };
 
-    fetchData();
+    fetchFormData();
   }, []);
 
   return { customers, products, loadingItems };

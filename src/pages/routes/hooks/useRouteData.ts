@@ -31,6 +31,7 @@ export function useRouteData() {
           email: customer.email || "",
           contact_person: customer.contact_person,
           status: customer.status as "active" | "inactive",
+          cycle: customer.cycle || "YYYY", // Add cycle field
           created_at: customer.created_at,
           location: customer.location ? {
             lat: Number((customer.location as any).lat || 0),
