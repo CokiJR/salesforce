@@ -23,6 +23,12 @@ import AddOrder from "@/pages/orders/AddOrder";
 import CreateRoute from "@/pages/routes/CreateRoute";
 import AddTransaction from "@/pages/transactions/AddTransaction";
 
+// Import the new detail view components
+import CustomerDetail from "@/pages/customers/CustomerDetail";
+import ProductDetail from "@/pages/products/ProductDetail";
+import OrderDetail from "@/pages/orders/OrderDetail";
+import RouteDetail from "@/pages/routes/RouteDetail";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,19 +46,19 @@ const App = () => (
               <Route index element={<Dashboard />} />
               
               <Route path="customers" element={<Customers />} />
-              <Route path="customers/:id" element={<div className="p-4 animate-fade-in">Customer details coming soon</div>} />
+              <Route path="customers/:id" element={<CustomerDetail />} />
               <Route path="customers/add" element={<AddCustomer />} />
               
               <Route path="products" element={<Products />} />
-              <Route path="products/:id" element={<div className="p-4 animate-fade-in">Product details coming soon</div>} />
+              <Route path="products/:id" element={<ProductDetail />} />
               <Route path="products/add" element={<AddProduct />} />
               
               <Route path="orders" element={<Orders />} />
-              <Route path="orders/:id" element={<div className="p-4 animate-fade-in">Order details coming soon</div>} />
+              <Route path="orders/:id" element={<OrderDetail />} />
               <Route path="orders/add" element={<AddOrder />} />
               
               <Route path="routes" element={<RoutesPage />} />
-              <Route path="routes/:id" element={<div className="p-4 animate-fade-in">Route details coming soon</div>} />
+              <Route path="routes/:id" element={<RouteDetail />} />
               <Route path="routes/create" element={<CreateRoute />} />
               
               <Route path="transactions" element={<Transactions />} />
