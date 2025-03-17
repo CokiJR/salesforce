@@ -60,7 +60,8 @@ export function useRoutes(date: Date) {
             visit_date: stop.visit_date,
             visit_time: stop.visit_time,
             status: stop.status as "pending" | "completed" | "skipped",
-            notes: stop.notes || ""
+            notes: stop.notes || "",
+            route_id: stop.route_id // Add the route_id property here
           };
         }) || [];
 
