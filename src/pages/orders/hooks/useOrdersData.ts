@@ -42,7 +42,7 @@ export function useOrdersData() {
           email: c.email || "",
           contact_person: c.contact_person,
           status: c.status as "active" | "inactive",
-          cycle: c.cycle || "YYYY", // Add cycle field
+          cycle: c.cycle || "YYYY", // Ensure cycle is included
           created_at: c.created_at,
           location: c.location ? {
             lat: Number((c.location as any).lat || 0),

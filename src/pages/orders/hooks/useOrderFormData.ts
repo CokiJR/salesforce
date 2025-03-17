@@ -33,7 +33,7 @@ export function useOrderFormData() {
           email: customer.email || "",
           contact_person: customer.contact_person,
           status: customer.status as "active" | "inactive",
-          cycle: customer.cycle || "YYYY", // Add cycle field
+          cycle: customer.cycle || "YYYY", // Ensure cycle is included
           created_at: customer.created_at,
           location: customer.location ? {
             lat: Number((customer.location as any).lat || 0),
