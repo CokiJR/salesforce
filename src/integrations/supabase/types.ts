@@ -15,6 +15,7 @@ export type Database = {
           city: string
           contact_person: string
           created_at: string
+          cycle: string
           email: string | null
           id: string
           location: Json | null
@@ -27,6 +28,7 @@ export type Database = {
           city: string
           contact_person: string
           created_at?: string
+          cycle?: string
           email?: string | null
           id?: string
           location?: Json | null
@@ -39,6 +41,7 @@ export type Database = {
           city?: string
           contact_person?: string
           created_at?: string
+          cycle?: string
           email?: string | null
           id?: string
           location?: Json | null

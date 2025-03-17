@@ -16,6 +16,7 @@ export interface Customer {
   email: string;
   contact_person: string;
   status: "active" | "inactive";
+  cycle: string; // Added cycle field for visit scheduling
   created_at: string;
   location?: { lat: number; lng: number };
 }

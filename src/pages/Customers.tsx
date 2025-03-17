@@ -43,6 +43,7 @@ const Customers = () => {
       const typedCustomers: Customer[] = data?.map(customer => ({
         ...customer,
         status: customer.status as "active" | "inactive",
+        cycle: customer.cycle || "YYYY", // Add cycle field with default
         // Convert JSON location to the expected format if it exists
         location: customer.location ? {
           lat: Number((customer.location as any).lat || 0),
@@ -78,6 +79,20 @@ const Customers = () => {
     customer.contact_person.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Function to get cycle description
+  const getCycleDescription = (cycle: string) => {
+    switch(cycle) {
+      case 'YYYY':
+        return 'Every Week';
+      case 'YTYT':
+        return 'Week 1 & 3';
+      case 'TYTY':
+        return 'Week 2 & 4';
+      default:
+        return cycle;
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -111,6 +126,7 @@ const Customers = () => {
                 <TableHead>Contact Person</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Visit Cycle</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,6 +146,11 @@ const Customers = () => {
                         : "bg-red-100 text-red-800"
                     }`}>
                       {customer.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                      {getCycleDescription(customer.cycle)}
                     </span>
                   </TableCell>
                 </TableRow>

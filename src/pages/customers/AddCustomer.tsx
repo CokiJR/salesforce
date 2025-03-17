@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { User, Mail, Building, Phone, MapPin, UserPlus } from "lucide-react";
+import { User, Mail, Building, Phone, MapPin, UserPlus, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define the validation schema
 const customerSchema = z.object({
@@ -24,6 +31,9 @@ const customerSchema = z.object({
   address: z.string().min(5, { message: "Address is required" }),
   city: z.string().min(2, { message: "City is required" }),
   status: z.enum(["active", "inactive"]),
+  cycle: z.enum(["YYYY", "YTYT", "TYTY"], { 
+    message: "Please select a valid visit cycle" 
+  }),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -35,6 +45,7 @@ export default function AddCustomer() {
 
   const defaultValues: Partial<CustomerFormValues> = {
     status: "active",
+    cycle: "YYYY",
   };
 
   const form = useForm<CustomerFormValues>({
@@ -56,6 +67,7 @@ export default function AddCustomer() {
         address: data.address,
         city: data.city,
         status: data.status,
+        cycle: data.cycle,
         created_at: new Date().toISOString(),
       };
       
@@ -209,40 +221,71 @@ export default function AddCustomer() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Customer Status</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="active" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              Active
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="inactive" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              Inactive
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Customer Status</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex space-x-4"
+                          >
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="active" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                Active
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="inactive" />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                Inactive
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="cycle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Visit Cycle</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <div className="relative">
+                              <SelectTrigger className="pl-10">
+                                <SelectValue placeholder="Select visit cycle" />
+                              </SelectTrigger>
+                              <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="YYYY">Every Week (YYYY)</SelectItem>
+                            <SelectItem value="YTYT">Week 1 & 3 (YTYT)</SelectItem>
+                            <SelectItem value="TYTY">Week 2 & 4 (TYTY)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Determines when this customer will be automatically scheduled for visits.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
               
               <CardFooter className="flex justify-between px-0 pt-4">
