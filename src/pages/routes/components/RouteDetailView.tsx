@@ -27,6 +27,12 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     }
   };
 
+  const handleMarkCompleted = () => {
+    if (route) {
+      navigate(`/dashboard/routes/edit/${route.id}`);
+    }
+  };
+
   const handleDelete = async () => {
     if (!route) return;
 
@@ -234,7 +240,7 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
           </Button>
           <div className="flex gap-2">
             {route.stops.some(stop => stop.status !== "completed") && (
-              <Button variant="default" onClick={handleEdit}>
+              <Button variant="default" onClick={handleMarkCompleted}>
                 <Check className="mr-2 h-4 w-4" />
                 Mark Completed
               </Button>

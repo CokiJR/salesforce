@@ -29,6 +29,9 @@ import ProductDetail from "@/pages/products/ProductDetail";
 import OrderDetail from "@/pages/orders/OrderDetail";
 import RouteDetail from "@/pages/routes/RouteDetail";
 
+// Import the edit route component
+import EditRoute from "@/pages/routes/EditRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -60,6 +63,7 @@ const App = () => (
               <Route path="routes" element={<RoutesPage />} />
               <Route path="routes/:id" element={<RouteDetail />} />
               <Route path="routes/create" element={<CreateRoute />} />
+              <Route path="routes/edit/:id" element={<EditRoute />} />
               
               <Route path="transactions" element={<Transactions />} />
               <Route path="transactions/:id" element={<div className="p-4 animate-fade-in">Transaction details coming soon</div>} />

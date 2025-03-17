@@ -33,8 +33,6 @@ import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 // Order form schema
 const orderSchema = z.object({
   customer_id: z.string().min(1, "Customer is required"),
-  payment_status: z.enum(["unpaid", "partial", "paid"]),
-  status: z.enum(["draft", "pending", "confirmed", "delivered", "canceled"]),
   delivery_date: z.date(),
   notes: z.string().optional(),
 });
@@ -64,8 +62,6 @@ export function OrderForm({
     defaultValues: {
       customer_id: "",
       delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-      payment_status: "unpaid",
-      status: "draft",
       notes: "",
     },
   });
@@ -136,56 +132,6 @@ export function OrderForm({
                     />
                   </PopoverContent>
                 </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="canceled">Canceled</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="payment_status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Payment Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="unpaid">Unpaid</SelectItem>
-                    <SelectItem value="partial">Partially Paid</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -1,15 +1,11 @@
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Order, OrderItem } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Edit, Printer, User, ShoppingCart } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, ArrowLeft, User, ShoppingCart } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface OrderDetailViewProps {
@@ -20,49 +16,11 @@ interface OrderDetailViewProps {
 export function OrderDetailView({ order, isLoading }: OrderDetailViewProps) {
   const navigate = useNavigate();
 
-  const handleEdit = () => {
-    if (order && order.sync_status !== "synced") {
-      navigate(`/dashboard/orders/edit/${order.id}`);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Cannot edit",
-        description: "This order has already been synced and cannot be edited",
-      });
-    }
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "canceled":
-        return "bg-red-100 text-red-800";
-      case "confirmed":
-        return "bg-blue-100 text-blue-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "partial":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-red-100 text-red-800";
-    }
   };
 
   if (isLoading) {
@@ -106,18 +64,6 @@ export function OrderDetailView({ order, isLoading }: OrderDetailViewProps) {
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">Order Details</h1>
         </div>
-        <div className="flex gap-2">
-          {order.sync_status !== "synced" && (
-            <Button variant="outline" onClick={handleEdit}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-          )}
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-        </div>
       </div>
 
       <Card>
@@ -128,14 +74,6 @@ export function OrderDetailView({ order, isLoading }: OrderDetailViewProps) {
               <CardDescription>
                 Created on {format(new Date(order.created_at), "MMMM d, yyyy")}
               </CardDescription>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge className={getStatusColor(order.status)}>
-                {order.status}
-              </Badge>
-              <Badge className={getPaymentStatusColor(order.payment_status)}>
-                {order.payment_status}
-              </Badge>
             </div>
           </div>
         </CardHeader>

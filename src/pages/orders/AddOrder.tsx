@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { ArrowLeft } from "lucide-react";
@@ -77,13 +75,13 @@ export default function AddOrder() {
     try {
       setIsSubmitting(true);
       
-      // Create order object
+      // Create order object with default status and payment_status
       const orderData = {
         customer_id: data.customer_id,
         salesperson_id: user?.id,
         delivery_date: format(data.delivery_date, "yyyy-MM-dd"),
-        payment_status: data.payment_status,
-        status: data.status,
+        payment_status: "unpaid", // Default payment status
+        status: "draft", // Default status
         total_amount: totalAmount,
         notes: data.notes || "",
         sync_status: "pending",
