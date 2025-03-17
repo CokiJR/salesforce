@@ -68,6 +68,7 @@ export interface RouteStop {
   visit_time: string;
   status: "pending" | "completed" | "skipped";
   notes: string;
+  route_id: string; // Added route_id field
 }
 
 export interface DailyRoute {

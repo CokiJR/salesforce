@@ -51,6 +51,8 @@ const OrderDetail = () => {
         // Create the complete order object
         const completeOrder: Order = {
           ...orderData,
+          status: orderData.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
+          payment_status: orderData.payment_status as "unpaid" | "partial" | "paid",
           customer: {
             ...customer,
             cycle: customer.cycle || "YYYY",
@@ -60,7 +62,8 @@ const OrderDetail = () => {
               lng: Number((customer.location as any).lng || 0)
             } : undefined
           },
-          items
+          items,
+          notes: orderData.notes || ""
         };
         
         setOrder(completeOrder);

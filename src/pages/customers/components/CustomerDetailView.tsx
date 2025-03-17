@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Customer, Order, DailyRoute, RouteStop } from "@/types";
@@ -26,11 +26,11 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
   const navigate = useNavigate();
 
   // Fetch related orders and visits when a customer is selected
-  useState(() => {
+  useEffect(() => {
     if (customer) {
       fetchRelatedData(customer.id);
     }
-  });
+  }, [customer]);
 
   const fetchRelatedData = async (customerId: string) => {
     setIsLoadingRelated(true);
@@ -53,8 +53,37 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
       
       if (stopsError) throw stopsError;
       
-      setCustomerOrders(orders || []);
-      setCustomerVisits(stops || []);
+      // Create fully typed orders
+      const typedOrders: Order[] = (orders || []).map(order => ({
+        id: order.id,
+        customer_id: order.customer_id,
+        customer: customer as Customer, // We already have the customer
+        salesperson_id: order.salesperson_id,
+        status: order.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
+        order_date: order.order_date,
+        delivery_date: order.delivery_date,
+        total_amount: order.total_amount,
+        payment_status: order.payment_status as "unpaid" | "partial" | "paid",
+        notes: order.notes || "",
+        items: [], // We don't load items for the list view
+        created_at: order.created_at,
+        sync_status: order.sync_status
+      }));
+      
+      // Create fully typed route stops
+      const typedStops: RouteStop[] = (stops || []).map(stop => ({
+        id: stop.id,
+        customer_id: stop.customer_id,
+        customer: customer as Customer, // We already have the customer
+        visit_date: stop.visit_date,
+        visit_time: stop.visit_time,
+        status: stop.status as "pending" | "completed" | "skipped",
+        notes: stop.notes || "",
+        route_id: stop.route_id // Add this to the types but map it here
+      }));
+      
+      setCustomerOrders(typedOrders);
+      setCustomerVisits(typedStops);
     } catch (error: any) {
       console.error("Error fetching related data:", error.message);
     } finally {
