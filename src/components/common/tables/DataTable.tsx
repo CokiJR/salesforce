@@ -77,17 +77,27 @@ export function DataTable<T extends { id: string | number }>({
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
               >
                 {columns.map((column, index) => {
-                  const accessorValue = 
-                    typeof column.accessorKey === "function"
-                      ? column.accessorKey(item)
-                      : item[column.accessorKey as keyof T];
+                  let cellContent: React.ReactNode;
+                  
+                  if (column.cell) {
+                    // Use the custom cell renderer if provided
+                    cellContent = column.cell(item);
+                  } else if (typeof column.accessorKey === "function") {
+                    // Use the accessor function
+                    cellContent = column.accessorKey(item);
+                  } else {
+                    // Get the value directly from the item
+                    const value = item[column.accessorKey];
+                    // Convert the value to string to ensure it's a valid ReactNode
+                    cellContent = value != null ? String(value) : '';
+                  }
                   
                   return (
                     <TableCell 
                       key={index}
                       className={noWrap ? "whitespace-nowrap" : ""}
                     >
-                      {column.cell ? column.cell(item) : accessorValue}
+                      {cellContent}
                     </TableCell>
                   );
                 })}
