@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 
@@ -35,8 +34,6 @@ interface RouteFormProps {
   stopsComponent: React.ReactNode;
   onCancel: () => void;
   hasStops: boolean;
-  isManualRoute?: boolean;
-  setIsManualRoute?: (value: boolean) => void;
 }
 
 export function RouteForm({
@@ -44,9 +41,7 @@ export function RouteForm({
   onSubmit,
   stopsComponent,
   onCancel,
-  hasStops,
-  isManualRoute = false,
-  setIsManualRoute
+  hasStops
 }: RouteFormProps) {
   // Initialize the form
   const form = useForm<RouteFormValues>({
@@ -59,7 +54,7 @@ export function RouteForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
           <FormField
             control={form.control}
             name="date"
@@ -98,17 +93,6 @@ export function RouteForm({
               </FormItem>
             )}
           />
-          
-          {setIsManualRoute && (
-            <div className="flex items-center justify-end space-x-2">
-              <FormLabel htmlFor="manual-route">Manual Route</FormLabel>
-              <Switch 
-                id="manual-route" 
-                checked={isManualRoute}
-                onCheckedChange={setIsManualRoute}
-              />
-            </div>
-          )}
         </div>
         
         {stopsComponent}

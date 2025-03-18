@@ -31,7 +31,6 @@ export default function CreateRoute() {
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [visitTime, setVisitTime] = useState<string>("09:00");
   const [notes, setNotes] = useState<string>("");
-  const [isManualRoute, setIsManualRoute] = useState(false);
   const navigate = useNavigate();
 
   // Handle adding a stop to the route
@@ -56,7 +55,7 @@ export default function CreateRoute() {
       customer: customer,
       visit_time: visitTime,
       notes: notes,
-      coverage_status: isManualRoute ? "Uncover Location" : "Cover Location"
+      coverage_status: "Cover Location"
     };
     
     setStops([...stops, newStop]);
@@ -162,8 +161,6 @@ export default function CreateRoute() {
             onSubmit={onSubmit}
             onCancel={() => navigate("/dashboard/routes")}
             hasStops={stops.length > 0}
-            isManualRoute={isManualRoute}
-            setIsManualRoute={setIsManualRoute}
             stopsComponent={
               <>
                 <AddStopForm
@@ -175,7 +172,6 @@ export default function CreateRoute() {
                   onVisitTimeChange={setVisitTime}
                   onNotesChange={setNotes}
                   onAddStop={handleAddStop}
-                  isManualRoute={isManualRoute}
                 />
                 
                 <RouteStopsTable
@@ -192,7 +188,6 @@ export default function CreateRoute() {
           <RouteSummaryPanel
             stopsCount={stops.length}
             routeDate={new Date()}
-            isManualRoute={isManualRoute}
           />
         </div>
       </div>

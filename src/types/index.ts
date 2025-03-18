@@ -70,9 +70,9 @@ export interface RouteStop {
   status: "pending" | "completed" | "skipped" | "not_ordered";
   notes: string;
   route_id: string;
-  coverage_status?: string; // Added coverage field
-  barcode_scanned?: boolean; // Added barcode scan tracking
-  visited?: boolean; // Added visited flag
+  coverage_status: string; // Added coverage field
+  barcode_scanned: boolean; // Added barcode scan tracking
+  visited: boolean; // Added visited flag
 }
 
 export interface DailyRoute {

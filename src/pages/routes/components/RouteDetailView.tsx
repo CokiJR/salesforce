@@ -2,16 +2,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { DailyRoute, RouteStop } from "@/types";
+import { DailyRoute, RouteStop, Customer } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, ArrowLeft, Edit, Trash2, Check, X, ShoppingBag, QrCode } from "lucide-react";
+import { Loader2, ArrowLeft, ShoppingBag, QrCode, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BarcodeScanner } from "./BarcodeScanner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface RouteDetailViewProps {
   route: DailyRoute | null;
@@ -19,85 +21,122 @@ interface RouteDetailViewProps {
 }
 
 export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [currentStopId, setCurrentStopId] = useState<string | null>(null);
+  const [addingOutlet, setAddingOutlet] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [visitTime, setVisitTime] = useState<string>("09:00");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
   const navigate = useNavigate();
 
-  const handleEdit = () => {
-    if (route) {
-      navigate(`/dashboard/routes/edit/${route.id}`);
-    }
-  };
-
-  const handleMarkCompleted = () => {
-    if (route) {
-      navigate(`/dashboard/routes/edit/${route.id}`);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!route) return;
-
+  // Fetch customers when adding outlet mode is enabled
+  const fetchCustomers = async () => {
     try {
-      setIsDeleting(true);
+      setLoadingCustomers(true);
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .order("name");
       
-      // First delete all route stops
-      const { error: stopsError } = await supabase
-        .from("route_stops")
-        .delete()
-        .eq("route_id", route.id);
+      if (error) throw error;
       
-      if (stopsError) throw stopsError;
-      
-      // Then delete the route itself
-      const { error: routeError } = await supabase
-        .from("daily_routes")
-        .delete()
-        .eq("id", route.id);
-      
-      if (routeError) throw routeError;
-      
-      toast({
-        title: "Route deleted",
-        description: "The route has been successfully deleted",
-      });
-      
-      navigate("/dashboard/routes");
+      setCustomers(data as Customer[]);
     } catch (error: any) {
-      console.error("Error deleting route:", error.message);
+      console.error("Error fetching customers:", error.message);
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to delete route: ${error.message}`,
+        description: `Failed to load customers: ${error.message}`,
       });
     } finally {
-      setIsDeleting(false);
+      setLoadingCustomers(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "skipped":
-        return "bg-yellow-100 text-yellow-800";
-      case "not_ordered":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-blue-100 text-blue-800";
+  // Toggle adding outlet mode
+  const toggleAddOutlet = () => {
+    const newState = !addingOutlet;
+    setAddingOutlet(newState);
+    
+    if (newState) {
+      fetchCustomers();
     }
   };
 
-  const getCoverageStatusColor = (status: string) => {
-    return status === "Cover Location" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-orange-100 text-orange-800";
+  // Add outlet to route
+  const handleAddOutlet = async () => {
+    if (!route || !selectedCustomerId || !visitTime) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please select a customer and visit time",
+      });
+      return;
+    }
+    
+    try {
+      // Check if customer is already in the route
+      if (route.stops.some(stop => stop.customer_id === selectedCustomerId)) {
+        toast({
+          variant: "destructive",
+          title: "Customer already added",
+          description: "This customer is already part of this route",
+        });
+        return;
+      }
+      
+      // Get the customer details
+      const customer = customers.find(c => c.id === selectedCustomerId);
+      if (!customer) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Selected customer not found",
+        });
+        return;
+      }
+      
+      // Add the new stop to the route
+      const newStop = {
+        route_id: route.id,
+        customer_id: selectedCustomerId,
+        visit_date: route.date,
+        visit_time: visitTime,
+        status: "pending",
+        notes: "",
+        coverage_status: "Uncover Location", // Set as uncover location for manual additions
+        visited: false,
+        barcode_scanned: false
+      };
+      
+      const { data, error } = await supabase
+        .from("route_stops")
+        .insert(newStop)
+        .select("*, customer:customers(*)");
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Outlet added",
+        description: "The outlet has been added to this route",
+      });
+      
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error adding outlet:", error.message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to add outlet: ${error.message}`,
+      });
+    }
   };
 
-  const handleCreateOrder = (customerId: string) => {
-    // Navigate to the add order page with the customer pre-selected
-    navigate(`/dashboard/orders/add?customer=${customerId}`);
+  const handleCreateOrder = (customerId: string, stopId: string) => {
+    // Navigate to the add order page with the customer and route_stop_id pre-selected
+    navigate(`/dashboard/orders/add?customer=${customerId}&route_stop_id=${stopId}`);
   };
 
   const handleScanBarcode = (stopId: string) => {
@@ -197,6 +236,25 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "skipped":
+        return "bg-yellow-100 text-yellow-800";
+      case "not_ordered":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-blue-100 text-blue-800";
+    }
+  };
+
+  const getCoverageStatusColor = (status: string) => {
+    return status === "Cover Location" 
+      ? "bg-green-100 text-green-800" 
+      : "bg-orange-100 text-orange-800";
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -262,48 +320,66 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">Route Details</h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleEdit}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
+        <div>
+          <Button 
+            variant="outline" 
+            onClick={toggleAddOutlet}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {addingOutlet ? "Cancel" : "Add Outlet"}
           </Button>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the route
-                  and all associated stops.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
+
+      {addingOutlet && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Outlet to Route</CardTitle>
+            <CardDescription>
+              Add a new outlet to this route. The outlet will be marked as "Uncover Location".
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select outlet" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loadingCustomers ? (
+                      <div className="flex items-center justify-center p-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Loading...
+                      </div>
+                    ) : (
+                      customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - {customer.city}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Input
+                  type="time"
+                  value={visitTime}
+                  onChange={(e) => setVisitTime(e.target.value)}
+                  placeholder="Visit time"
+                />
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button onClick={handleAddOutlet}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add to Route
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -395,7 +471,7 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                         {(stop.visited || stop.status === "pending") && stop.status !== "completed" && (
                           <Button 
                             size="sm" 
-                            onClick={() => handleCreateOrder(stop.customer_id)}
+                            onClick={() => handleCreateOrder(stop.customer_id, stop.id)}
                           >
                             <ShoppingBag className="mr-2 h-4 w-4" />
                             Order
@@ -409,7 +485,7 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                             variant="destructive"
                             onClick={() => handleMarkSkipped(stop.id)}
                           >
-                            <X className="mr-2 h-4 w-4" />
+                            X
                             Skip
                           </Button>
                         )}
@@ -428,14 +504,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Routes
           </Button>
-          <div className="flex gap-2">
-            {route.stops.some(stop => stop.status !== "completed") && (
-              <Button variant="default" onClick={handleMarkCompleted}>
-                <Check className="mr-2 h-4 w-4" />
-                Mark Completed
-              </Button>
-            )}
-          </div>
         </CardFooter>
       </Card>
     </div>

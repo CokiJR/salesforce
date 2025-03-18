@@ -10,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Plus } from "lucide-react";
 
 interface AddStopFormProps {
   customers: Customer[];
@@ -22,7 +21,6 @@ interface AddStopFormProps {
   onVisitTimeChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onAddStop: () => void;
-  isManualRoute?: boolean;
 }
 
 export function AddStopForm({
@@ -33,21 +31,11 @@ export function AddStopForm({
   onCustomerChange,
   onVisitTimeChange,
   onNotesChange,
-  onAddStop,
-  isManualRoute = false
+  onAddStop
 }: AddStopFormProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Customer Stops</h3>
-      
-      {isManualRoute && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            This is a manual route. All stops will be marked as "Uncover Location".
-          </AlertDescription>
-        </Alert>
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
