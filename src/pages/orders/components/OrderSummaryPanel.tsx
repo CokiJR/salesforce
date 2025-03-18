@@ -1,7 +1,6 @@
-
 import { ShoppingCart } from "lucide-react";
 import { OrderItemWithDetails } from "../utils/orderFormUtils";
-import { formatCurrency } from "../utils/orderUtils";
+import { formatCurrency } from "../utils/currencyUtils";
 
 interface OrderSummaryPanelProps {
   orderItems: OrderItemWithDetails[];

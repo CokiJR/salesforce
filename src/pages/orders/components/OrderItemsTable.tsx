@@ -1,4 +1,3 @@
-
 import { Trash2, ShoppingCart, Plus } from "lucide-react";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { OrderItemWithDetails } from "../utils/orderFormUtils";
-import { formatCurrency } from "../utils/orderUtils";
+import { formatCurrency } from "../utils/currencyUtils";
 
 interface OrderItemsTableProps {
   orderItems: OrderItemWithDetails[];
