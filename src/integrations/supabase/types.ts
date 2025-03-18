@@ -123,6 +123,7 @@ export type Database = {
           notes: string | null
           order_date: string
           payment_status: string
+          route_stop_id: string | null
           salesperson_id: string
           status: string
           sync_status: string | null
@@ -136,6 +137,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_status: string
+          route_stop_id?: string | null
           salesperson_id: string
           status: string
           sync_status?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_status?: string
+          route_stop_id?: string | null
           salesperson_id?: string
           status?: string
           sync_status?: string | null

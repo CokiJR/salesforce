@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -25,7 +24,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch related orders and visits when a customer is selected
   useEffect(() => {
     if (customer) {
       fetchRelatedData(customer.id);
@@ -35,7 +33,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
   const fetchRelatedData = async (customerId: string) => {
     setIsLoadingRelated(true);
     try {
-      // Fetch customer orders
       const { data: orders, error: ordersError } = await supabase
         .from("orders")
         .select("*")
@@ -44,7 +41,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
       
       if (ordersError) throw ordersError;
       
-      // Fetch customer visits
       const { data: stops, error: stopsError } = await supabase
         .from("route_stops")
         .select("*, daily_routes(*)")
@@ -53,11 +49,10 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
       
       if (stopsError) throw stopsError;
       
-      // Create fully typed orders
       const typedOrders: Order[] = (orders || []).map(order => ({
         id: order.id,
         customer_id: order.customer_id,
-        customer: customer as Customer, // We already have the customer
+        customer: customer as Customer,
         salesperson_id: order.salesperson_id,
         status: order.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
         order_date: order.order_date,
@@ -65,21 +60,24 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
         total_amount: order.total_amount,
         payment_status: order.payment_status as "unpaid" | "partial" | "paid",
         notes: order.notes || "",
-        items: [], // We don't load items for the list view
+        items: [],
         created_at: order.created_at,
-        sync_status: order.sync_status
+        sync_status: order.sync_status,
+        route_stop_id: order.route_stop_id
       }));
       
-      // Create fully typed route stops
       const typedStops: RouteStop[] = (stops || []).map(stop => ({
         id: stop.id,
         customer_id: stop.customer_id,
-        customer: customer as Customer, // We already have the customer
+        customer: customer as Customer,
         visit_date: stop.visit_date,
         visit_time: stop.visit_time,
-        status: stop.status as "pending" | "completed" | "skipped",
+        status: stop.status as "pending" | "completed" | "skipped" | "not_ordered",
         notes: stop.notes || "",
-        route_id: stop.route_id // Add this to the types but map it here
+        route_id: stop.route_id,
+        coverage_status: stop.coverage_status || "Cover Location",
+        barcode_scanned: stop.barcode_scanned || false,
+        visited: stop.visited || false
       }));
       
       setCustomerOrders(typedOrders);
@@ -103,7 +101,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
     try {
       setIsDeleting(true);
       
-      // Check if customer has any orders
       const { data: orders, error: ordersCheckError } = await supabase
         .from("orders")
         .select("id")
@@ -116,7 +113,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
         throw new Error("Cannot delete customer with associated orders");
       }
       
-      // Check if customer has any route stops
       const { data: stops, error: stopsCheckError } = await supabase
         .from("route_stops")
         .select("id")
@@ -129,7 +125,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
         throw new Error("Cannot delete customer with associated route stops");
       }
       
-      // Delete the customer
       const { error: deleteError } = await supabase
         .from("customers")
         .delete()
@@ -155,7 +150,6 @@ export function CustomerDetailView({ customer, isLoading }: CustomerDetailViewPr
     }
   };
 
-  // Function to get cycle description
   const getCycleDescription = (cycle: string) => {
     switch(cycle) {
       case 'YYYY':

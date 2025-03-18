@@ -21,6 +21,8 @@ interface AddStopFormProps {
   onVisitTimeChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onAddStop: () => void;
+  coverageStatus?: string;
+  onCoverageStatusChange?: (value: string) => void;
 }
 
 export function AddStopForm({
@@ -31,7 +33,9 @@ export function AddStopForm({
   onCustomerChange,
   onVisitTimeChange,
   onNotesChange,
-  onAddStop
+  onAddStop,
+  coverageStatus = "Cover Location",
+  onCoverageStatusChange
 }: AddStopFormProps) {
   return (
     <div className="space-y-4">
@@ -74,6 +78,23 @@ export function AddStopForm({
           </Button>
         </div>
       </div>
+      
+      {onCoverageStatusChange && (
+        <div>
+          <Select 
+            value={coverageStatus} 
+            onValueChange={onCoverageStatusChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Coverage status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Cover Location">Cover Location</SelectItem>
+              <SelectItem value="Uncover Location">Uncover Location</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       
       <div>
         <Textarea

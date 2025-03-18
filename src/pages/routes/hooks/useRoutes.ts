@@ -59,9 +59,12 @@ export function useRoutes(date: Date) {
             customer: typedCustomer,
             visit_date: stop.visit_date,
             visit_time: stop.visit_time,
-            status: stop.status as "pending" | "completed" | "skipped",
+            status: stop.status as "pending" | "completed" | "skipped" | "not_ordered",
             notes: stop.notes || "",
-            route_id: stop.route_id // Add the route_id property here
+            route_id: stop.route_id,
+            coverage_status: stop.coverage_status || "Cover Location", // Add missing field
+            barcode_scanned: stop.barcode_scanned || false, // Add missing field
+            visited: stop.visited || false // Add missing field
           };
         }) || [];
 
