@@ -44,6 +44,9 @@ const RouteDetail = () => {
           const customer = stop.customer as Customer;
           return {
             ...stop,
+            coverage_status: stop.coverage_status || "Cover Location",
+            barcode_scanned: stop.barcode_scanned || false,
+            visited: stop.visited || false,
             customer: {
               ...customer,
               cycle: customer.cycle || "YYYY",

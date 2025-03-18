@@ -20,6 +20,7 @@ type RouteStop = {
   customer: Customer;
   visit_time: string;
   notes?: string;
+  coverage_status: string;
 };
 
 export default function CreateRoute() {
@@ -30,6 +31,7 @@ export default function CreateRoute() {
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [visitTime, setVisitTime] = useState<string>("09:00");
   const [notes, setNotes] = useState<string>("");
+  const [isManualRoute, setIsManualRoute] = useState(false);
   const navigate = useNavigate();
 
   // Handle adding a stop to the route
@@ -53,7 +55,8 @@ export default function CreateRoute() {
       customer_id: customer.id,
       customer: customer,
       visit_time: visitTime,
-      notes: notes
+      notes: notes,
+      coverage_status: isManualRoute ? "Uncover Location" : "Cover Location"
     };
     
     setStops([...stops, newStop]);
@@ -105,7 +108,10 @@ export default function CreateRoute() {
         visit_date: format(data.date, "yyyy-MM-dd"),
         visit_time: stop.visit_time,
         status: "pending",
-        notes: stop.notes || ""
+        notes: stop.notes || "",
+        coverage_status: stop.coverage_status,
+        barcode_scanned: false,
+        visited: false
       }));
       
       const { error: stopsError } = await supabase
@@ -156,6 +162,8 @@ export default function CreateRoute() {
             onSubmit={onSubmit}
             onCancel={() => navigate("/dashboard/routes")}
             hasStops={stops.length > 0}
+            isManualRoute={isManualRoute}
+            setIsManualRoute={setIsManualRoute}
             stopsComponent={
               <>
                 <AddStopForm
@@ -167,11 +175,13 @@ export default function CreateRoute() {
                   onVisitTimeChange={setVisitTime}
                   onNotesChange={setNotes}
                   onAddStop={handleAddStop}
+                  isManualRoute={isManualRoute}
                 />
                 
                 <RouteStopsTable
                   stops={stops}
                   onRemoveStop={handleRemoveStop}
+                  showCoverageStatus={true}
                 />
               </>
             }
@@ -182,6 +192,7 @@ export default function CreateRoute() {
           <RouteSummaryPanel
             stopsCount={stops.length}
             routeDate={new Date()}
+            isManualRoute={isManualRoute}
           />
         </div>
       </div>

@@ -232,6 +232,8 @@ export type Database = {
       }
       route_stops: {
         Row: {
+          barcode_scanned: boolean
+          coverage_status: string
           customer_id: string
           id: string
           notes: string | null
@@ -239,8 +241,11 @@ export type Database = {
           status: string
           visit_date: string
           visit_time: string
+          visited: boolean
         }
         Insert: {
+          barcode_scanned?: boolean
+          coverage_status?: string
           customer_id: string
           id?: string
           notes?: string | null
@@ -248,8 +253,11 @@ export type Database = {
           status: string
           visit_date: string
           visit_time: string
+          visited?: boolean
         }
         Update: {
+          barcode_scanned?: boolean
+          coverage_status?: string
           customer_id?: string
           id?: string
           notes?: string | null
@@ -257,6 +265,7 @@ export type Database = {
           status?: string
           visit_date?: string
           visit_time?: string
+          visited?: boolean
         }
         Relationships: [
           {

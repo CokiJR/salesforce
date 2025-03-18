@@ -58,6 +58,7 @@ export interface Order {
   items: OrderItem[];
   created_at: string;
   sync_status?: string;
+  route_stop_id?: string; // Added to link orders to route stops
 }
 
 export interface RouteStop {
@@ -66,9 +67,12 @@ export interface RouteStop {
   customer: Customer;
   visit_date: string;
   visit_time: string;
-  status: "pending" | "completed" | "skipped";
+  status: "pending" | "completed" | "skipped" | "not_ordered";
   notes: string;
-  route_id: string; // Added route_id field
+  route_id: string;
+  coverage_status?: string; // Added coverage field
+  barcode_scanned?: boolean; // Added barcode scan tracking
+  visited?: boolean; // Added visited flag
 }
 
 export interface DailyRoute {
@@ -92,8 +96,8 @@ export interface Transaction {
   customer_name?: string;
   amount: number;
   transaction_id: string;
-  status: string; // Changed from "pending" | "completed" | "failed" to string to match the database
-  sync_status: string; // Changed from "pending" | "synced" | "failed" to string
+  status: string;
+  sync_status: string;
   payment_method: "cash" | "credit_card" | "bank_transfer";
   transaction_date: string;
   created_at: string;

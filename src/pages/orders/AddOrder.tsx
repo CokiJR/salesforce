@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,24 @@ export default function AddOrder() {
   const [orderItems, setOrderItems] = useState<OrderItemWithDetails[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [searchParams] = useSearchParams();
+  const [preselectedCustomer, setPreselectedCustomer] = useState<string | null>(null);
+  const [routeStopId, setRouteStopId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Parse query parameters for customer and route stop
+  useEffect(() => {
+    const customer = searchParams.get("customer");
+    const stopId = searchParams.get("stop");
+    
+    if (customer) {
+      setPreselectedCustomer(customer);
+    }
+    
+    if (stopId) {
+      setRouteStopId(stopId);
+    }
+  }, [searchParams]);
 
   // Calculate total amount
   const totalAmount = calculateOrderTotal(orderItems);
@@ -85,6 +103,7 @@ export default function AddOrder() {
         total_amount: totalAmount,
         notes: data.notes || "",
         sync_status: "pending",
+        route_stop_id: routeStopId // Include route stop ID if available
       };
       
       // Insert order
@@ -111,12 +130,41 @@ export default function AddOrder() {
       
       if (itemsError) throw itemsError;
       
+      // If this came from a route stop, update the stop status to completed
+      if (routeStopId) {
+        const { error: stopError } = await supabase
+          .from("route_stops")
+          .update({ 
+            status: "completed",
+            visited: true
+          })
+          .eq("id", routeStopId);
+        
+        if (stopError) {
+          console.error("Error updating route stop:", stopError);
+          // Don't throw here, as the order was already created
+        }
+      }
+      
       toast({
         title: "Order created",
         description: `Order has been created successfully.`,
       });
       
-      navigate("/dashboard/orders");
+      // If we came from a route detail, go back to it
+      if (routeStopId) {
+        // Extract route ID from the referrer if possible
+        const referrer = document.referrer;
+        const routeMatch = referrer.match(/\/routes\/([^\/]+)$/);
+        
+        if (routeMatch && routeMatch[1]) {
+          navigate(`/dashboard/routes/${routeMatch[1]}`);
+        } else {
+          navigate("/dashboard/orders");
+        }
+      } else {
+        navigate("/dashboard/orders");
+      }
     } catch (error: any) {
       console.error("Error creating order:", error.message);
       toast({
@@ -136,9 +184,9 @@ export default function AddOrder() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/dashboard/orders")}
+            onClick={() => navigate(-1)}
             className="rounded-full"
-            aria-label="Back to orders"
+            aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -152,8 +200,9 @@ export default function AddOrder() {
             customers={customers}
             isSubmitting={isSubmitting}
             onSubmit={onSubmit}
-            onCancel={() => navigate("/dashboard/orders")}
+            onCancel={() => navigate(-1)}
             hasOrderItems={orderItems.length > 0}
+            preselectedCustomer={preselectedCustomer}
             orderItemsComponent={
               <OrderItemsTable
                 orderItems={orderItems}

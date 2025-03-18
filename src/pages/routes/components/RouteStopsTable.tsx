@@ -10,24 +10,33 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type RouteStop = {
   customer_id: string;
   customer: Customer;
   visit_time: string;
   notes?: string;
+  coverage_status?: string;
 };
 
 interface RouteStopsTableProps {
   stops: RouteStop[];
   onRemoveStop: (index: number) => void;
+  showCoverageStatus?: boolean;
 }
 
-export function RouteStopsTable({ stops, onRemoveStop }: RouteStopsTableProps) {
+export function RouteStopsTable({ stops, onRemoveStop, showCoverageStatus = false }: RouteStopsTableProps) {
   // Sort stops by visit time
   const sortedStops = [...stops].sort((a, b) => {
     return a.visit_time.localeCompare(b.visit_time);
   });
+
+  const getCoverageStatusColor = (status?: string) => {
+    return status === "Cover Location" 
+      ? "bg-green-100 text-green-800" 
+      : "bg-orange-100 text-orange-800";
+  };
 
   if (sortedStops.length === 0) {
     return (
@@ -47,6 +56,7 @@ export function RouteStopsTable({ stops, onRemoveStop }: RouteStopsTableProps) {
             <TableHead>Time</TableHead>
             <TableHead>Customer</TableHead>
             <TableHead>Address</TableHead>
+            {showCoverageStatus && <TableHead>Coverage</TableHead>}
             <TableHead>Notes</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -59,6 +69,13 @@ export function RouteStopsTable({ stops, onRemoveStop }: RouteStopsTableProps) {
               <TableCell>
                 {stop.customer.address}, {stop.customer.city}
               </TableCell>
+              {showCoverageStatus && (
+                <TableCell>
+                  <Badge className={getCoverageStatusColor(stop.coverage_status)}>
+                    {stop.coverage_status || "Cover Location"}
+                  </Badge>
+                </TableCell>
+              )}
               <TableCell className="max-w-[200px] truncate">
                 {stop.notes || "-"}
               </TableCell>

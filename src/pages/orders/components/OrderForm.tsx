@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
+import { useEffect } from "react";
 import { Customer } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ interface OrderFormProps {
   orderItemsComponent: React.ReactNode;
   onCancel: () => void;
   hasOrderItems: boolean;
+  preselectedCustomer?: string | null;
 }
 
 export function OrderForm({ 
@@ -54,17 +56,25 @@ export function OrderForm({
   onSubmit, 
   orderItemsComponent,
   onCancel,
-  hasOrderItems
+  hasOrderItems,
+  preselectedCustomer
 }: OrderFormProps) {
   // Initialize the form
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      customer_id: "",
+      customer_id: preselectedCustomer || "",
       delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
       notes: "",
     },
   });
+
+  // Update the form when preselectedCustomer changes
+  useEffect(() => {
+    if (preselectedCustomer) {
+      form.setValue("customer_id", preselectedCustomer);
+    }
+  }, [preselectedCustomer, form]);
   
   return (
     <Form {...form}>
