@@ -21,8 +21,6 @@ interface OrdersTableProps {
 export const OrdersTable = ({ 
   orders, 
   formatCurrency, 
-  getStatusColor, 
-  getPaymentStatusColor,
   onOrderClick
 }: OrdersTableProps) => {
   return (
@@ -34,8 +32,6 @@ export const OrdersTable = ({
             <TableHead>Customer</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Payment</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -49,20 +45,10 @@ export const OrdersTable = ({
               <TableCell>{order.customer?.name}</TableCell>
               <TableCell>{format(new Date(order.order_date), "MMM d, yyyy")}</TableCell>
               <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status)}`}>
-                  {order.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPaymentStatusColor(order.payment_status)}`}>
-                  {order.payment_status}
-                </span>
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </div>
   );
-};
+}

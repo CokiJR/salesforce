@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Map, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface CustomerActionsProps {
@@ -20,10 +20,6 @@ export function CustomerActions({ customerId }: CustomerActionsProps) {
         <Button variant="outline" onClick={() => navigate("/dashboard/routes/create")}>
           <Map className="mr-2 h-4 w-4" />
           Add to Route
-        </Button>
-        <Button onClick={() => navigate(`/dashboard/orders/add?customer=${customerId}`)}>
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          Create Order
         </Button>
       </div>
     </div>

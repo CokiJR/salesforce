@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useOrdersData } from "./orders/hooks/useOrdersData";
 import { formatCurrency } from "./orders/utils/currencyUtils";
-import { getStatusColor, getPaymentStatusColor } from "./orders/utils/orderUtils";
 import { OrdersHeader } from "./orders/components/OrdersHeader";
 import { OrderSearch } from "./orders/components/OrderSearch";
 import { OrdersTable } from "./orders/components/OrdersTable";
@@ -25,8 +24,7 @@ const Orders = () => {
 
   const filteredOrders = orders.filter(order => 
     order.customer?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.status.toLowerCase().includes(searchQuery.toLowerCase())
+    order.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -46,8 +44,8 @@ const Orders = () => {
         <OrdersTable 
           orders={filteredOrders}
           formatCurrency={formatCurrency}
-          getStatusColor={getStatusColor}
-          getPaymentStatusColor={getPaymentStatusColor}
+          getStatusColor={() => ""}
+          getPaymentStatusColor={() => ""}
           onOrderClick={handleOrderDetails}
         />
       ) : (

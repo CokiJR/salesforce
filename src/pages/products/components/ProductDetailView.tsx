@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, ArrowLeft, Edit, Trash2, ShoppingCart } from "lucide-react";
+import { Loader2, ArrowLeft, Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ProductDetailViewProps {
@@ -228,10 +228,6 @@ export function ProductDetailView({ product, isLoading }: ProductDetailViewProps
           <Button variant="outline" onClick={() => navigate("/dashboard/products")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Products
-          </Button>
-          <Button onClick={() => navigate("/dashboard/orders/add")}>
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            Create Order
           </Button>
         </CardFooter>
       </Card>
