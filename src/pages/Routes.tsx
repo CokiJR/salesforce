@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useRoutes } from "./routes/hooks/useRoutes";
@@ -9,9 +9,15 @@ import { RouteCalendar } from "./routes/components/RouteCalendar";
 import { RoutesTable } from "./routes/components/RoutesTable";
 import { EmptyRoutesState } from "./routes/components/EmptyRoutesState";
 import { AutomatedRoutePanel } from "./routes/components/AutomatedRoutePanel";
+import { startOfWeek } from "date-fns";
 
 const RoutesPage = () => {
-  const [date, setDate] = useState<Date>(new Date());
+  // Initialize to start of current week
+  const [date, setDate] = useState<Date>(() => {
+    const now = new Date();
+    return startOfWeek(now, { weekStartsOn: 1 });
+  });
+  
   const navigate = useNavigate();
   const { routes, loading, fetchRoutes } = useRoutes(date);
   const { customers, loadingCustomers } = useCustomers();

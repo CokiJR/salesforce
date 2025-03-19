@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { DailyRoute, RouteStop } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 export const useRouteEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,8 +38,7 @@ export const useRouteEdit = () => {
             *,
             customer:customers(*)
           `)
-          .eq("route_id", id)
-          .order("visit_time");
+          .eq("route_id", id);
         
         if (stopsError) throw stopsError;
         
@@ -84,9 +84,24 @@ export const useRouteEdit = () => {
   // Handle status change for a stop
   const handleStatusChange = (stopId: string, status: "pending" | "completed" | "skipped") => {
     setStops(prevStops => 
-      prevStops.map(stop => 
-        stop.id === stopId ? { ...stop, status } : stop
-      )
+      prevStops.map(stop => {
+        if (stop.id === stopId) {
+          // If changing to completed or skipped and there's no visit date/time,
+          // automatically set it to now
+          if ((status === "completed" || status === "skipped") && 
+              (!stop.visit_date || !stop.visit_time)) {
+            const now = new Date();
+            return { 
+              ...stop, 
+              status, 
+              visit_date: format(now, "yyyy-MM-dd"),
+              visit_time: format(now, "HH:mm:ss")
+            };
+          }
+          return { ...stop, status };
+        }
+        return stop;
+      })
     );
   };
 
@@ -101,8 +116,20 @@ export const useRouteEdit = () => {
 
   // Mark all stops as completed
   const handleMarkAllCompleted = () => {
+    const now = new Date();
     setStops(prevStops => 
-      prevStops.map(stop => ({ ...stop, status: "completed" }))
+      prevStops.map(stop => {
+        // For stops that don't have a visit date/time yet, set it to now
+        if (!stop.visit_date || !stop.visit_time) {
+          return { 
+            ...stop, 
+            status: "completed",
+            visit_date: format(now, "yyyy-MM-dd"),
+            visit_time: format(now, "HH:mm:ss")
+          };
+        }
+        return { ...stop, status: "completed" };
+      })
     );
   };
 
@@ -117,7 +144,10 @@ export const useRouteEdit = () => {
           .from("route_stops")
           .update({ 
             status: stop.status,
-            notes: stop.notes
+            notes: stop.notes,
+            visit_date: stop.visit_date,
+            visit_time: stop.visit_time,
+            visited: stop.status === "completed" ? true : stop.visited
           })
           .eq("id", stop.id);
         

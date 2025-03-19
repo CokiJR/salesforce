@@ -9,6 +9,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { format } from "date-fns";
 
 interface EditRouteStopsProps {
   stops: RouteStop[];
@@ -38,9 +39,15 @@ export const EditRouteStops = ({
                 <p className="text-sm text-muted-foreground">
                   {stop.customer.address}, {stop.customer.city}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Visit time: {stop.visit_time}
-                </p>
+                {stop.visit_date && stop.visit_time ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Visited: {format(new Date(stop.visit_date), "MMM d, yyyy")} at {stop.visit_time}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Not visited yet
+                  </p>
+                )}
               </div>
               
               <div className="flex flex-col gap-2 w-full md:w-48">
@@ -78,4 +85,4 @@ export const EditRouteStops = ({
       ))}
     </div>
   );
-};
+}

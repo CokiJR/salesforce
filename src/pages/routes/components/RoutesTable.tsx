@@ -8,7 +8,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 
 interface RoutesTableProps {
   routes: DailyRoute[];
@@ -34,14 +34,18 @@ export function RoutesTable({ routes, onRouteClick }: RoutesTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Route ID</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Stops</TableHead>
+            <TableHead>Week Period</TableHead>
+            <TableHead>Outlets</TableHead>
             <TableHead>Progress</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {routes.map((route) => {
             const status = getStatusSummary(route);
+            const routeDate = new Date(route.date);
+            const weekStart = startOfWeek(routeDate, { weekStartsOn: 1 });
+            const weekEnd = endOfWeek(routeDate, { weekStartsOn: 1 });
+            
             return (
               <TableRow 
                 key={route.id} 
@@ -49,8 +53,8 @@ export function RoutesTable({ routes, onRouteClick }: RoutesTableProps) {
                 onClick={() => onRouteClick(route.id)}
               >
                 <TableCell className="font-medium">{route.id.substring(0, 8)}</TableCell>
-                <TableCell>{format(new Date(route.date), "EEEE, MMMM d, yyyy")}</TableCell>
-                <TableCell>{status.total} stops</TableCell>
+                <TableCell>{format(weekStart, "MMM d")} - {format(weekEnd, "MMM d, yyyy")}</TableCell>
+                <TableCell>{status.total} outlets</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">

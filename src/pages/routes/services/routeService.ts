@@ -1,20 +1,23 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types";
-import { format } from "date-fns";
+import { format, startOfWeek } from "date-fns";
 import { shouldVisitThisWeek } from "@/utils/routeScheduler";
 
-// Create an automated route based on customer visit cycles
+// Create an automated route based on customer visit cycles for the entire week
 export async function createAutomatedRoute(
   date: Date, 
   salespersonId: string, 
   eligibleCustomers: Customer[]
 ) {
-  // Step 1: Create the route record
+  // Normalize to start of week to ensure consistency
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+  
+  // Step 1: Create the weekly route record
   const { data: newRoute, error: routeError } = await supabase
     .from("daily_routes")
     .insert({
-      date: format(date, "yyyy-MM-dd"),
+      date: format(weekStart, "yyyy-MM-dd"),
       salesperson_id: salespersonId,
     })
     .select("*")
@@ -28,25 +31,17 @@ export async function createAutomatedRoute(
     a.name.localeCompare(b.name)
   );
   
-  // Base time for first visit (9:00 AM)
-  const baseHour = 9;
-  const visitDurationMinutes = 30;
-  
-  // Create route stops with incremental visit times
-  const routeStopsData = sortedCustomers.map((customer, index) => {
-    // Calculate visit time (30 min intervals starting at 9:00 AM)
-    const totalMinutes = baseHour * 60 + index * visitDurationMinutes;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    
+  // For weekly routes, we spread customers throughout the week
+  // Each customer is initially added with no specific visit time
+  // Visit date and time will be set automatically when the visit happens
+  const routeStopsData = sortedCustomers.map((customer) => {
     return {
       route_id: newRoute.id,
       customer_id: customer.id,
-      visit_date: format(date, "yyyy-MM-dd"),
-      visit_time: formattedTime,
+      visit_date: null, // Will be set when the outlet is visited or skipped
+      visit_time: null, // Will be set when the outlet is visited or skipped
       status: "pending",
-      notes: `Auto-scheduled visit (${customer.cycle} cycle)`
+      notes: `Scheduled for weekly visit (${customer.cycle} cycle)`
     };
   });
   

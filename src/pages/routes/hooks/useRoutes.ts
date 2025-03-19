@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyRoute, RouteStop, Customer } from "@/types";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 
 export function useRoutes(date: Date) {
   const [routes, setRoutes] = useState<DailyRoute[]>([]);
@@ -13,11 +13,20 @@ export function useRoutes(date: Date) {
   const fetchRoutes = async () => {
     try {
       setLoading(true);
-      const formattedDate = format(date, "yyyy-MM-dd");
+      
+      // Get start and end of the week for date filtering
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+      
+      const formattedWeekStart = format(weekStart, "yyyy-MM-dd");
+      const formattedWeekEnd = format(weekEnd, "yyyy-MM-dd");
+      
+      // Query routes for the given week
       const { data: routesData, error: routesError } = await supabase
         .from("daily_routes")
         .select("*")
-        .eq("date", formattedDate);
+        .gte("date", formattedWeekStart)
+        .lte("date", formattedWeekEnd);
 
       if (routesError) throw routesError;
 

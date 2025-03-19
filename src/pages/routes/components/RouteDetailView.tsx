@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -30,7 +29,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch customers when adding outlet mode is enabled
   const fetchCustomers = async () => {
     try {
       setLoadingCustomers(true);
@@ -54,7 +52,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     }
   };
 
-  // Toggle adding outlet mode
   const toggleAddOutlet = () => {
     const newState = !addingOutlet;
     setAddingOutlet(newState);
@@ -64,7 +61,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     }
   };
 
-  // Add outlet to route
   const handleAddOutlet = async () => {
     if (!route || !selectedCustomerId || !visitTime) {
       toast({
@@ -76,7 +72,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     }
     
     try {
-      // Check if customer is already in the route
       if (route.stops.some(stop => stop.customer_id === selectedCustomerId)) {
         toast({
           variant: "destructive",
@@ -86,7 +81,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         return;
       }
       
-      // Get the customer details
       const customer = customers.find(c => c.id === selectedCustomerId);
       if (!customer) {
         toast({
@@ -97,7 +91,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         return;
       }
       
-      // Add the new stop to the route
       const newStop = {
         route_id: route.id,
         customer_id: selectedCustomerId,
@@ -105,7 +98,7 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         visit_time: visitTime,
         status: "pending",
         notes: "",
-        coverage_status: "Uncover Location", // Set as uncover location for manual additions
+        coverage_status: "Uncover Location",
         visited: false,
         barcode_scanned: false
       };
@@ -122,7 +115,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         description: "The outlet has been added to this route",
       });
       
-      // Refresh the page to update the UI
       window.location.reload();
     } catch (error: any) {
       console.error("Error adding outlet:", error.message);
@@ -135,7 +127,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
   };
 
   const handleCreateOrder = (customerId: string, stopId: string) => {
-    // Navigate to the add order page with the customer and route_stop_id pre-selected
     navigate(`/dashboard/orders/add?customer=${customerId}&route_stop_id=${stopId}`);
   };
 
@@ -150,12 +141,14 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     if (!currentStopId) return;
     
     try {
-      // Update the stop with barcode scanned status
+      const now = new Date();
       const { error } = await supabase
         .from("route_stops")
         .update({ 
           barcode_scanned: true,
-          visited: true 
+          visited: true,
+          visit_date: format(now, "yyyy-MM-dd"),
+          visit_time: format(now, "HH:mm:ss")
         })
         .eq("id", currentStopId);
       
@@ -166,7 +159,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         description: "Customer location has been marked as visited",
       });
       
-      // Refresh the page to update the UI
       window.location.reload();
     } catch (error: any) {
       console.error("Error updating stop:", error.message);
@@ -184,10 +176,14 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     if (!currentStopId) return;
     
     try {
-      // Mark as visited without barcode scan
+      const now = new Date();
       const { error } = await supabase
         .from("route_stops")
-        .update({ visited: true })
+        .update({ 
+          visited: true,
+          visit_date: format(now, "yyyy-MM-dd"),
+          visit_time: format(now, "HH:mm:ss")
+        })
         .eq("id", currentStopId);
       
       if (error) throw error;
@@ -197,7 +193,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         description: "Customer location has been marked as visited without barcode scanning",
       });
       
-      // Refresh the page to update the UI
       window.location.reload();
     } catch (error: any) {
       console.error("Error updating stop:", error.message);
@@ -211,10 +206,14 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
 
   const handleMarkSkipped = async (stopId: string) => {
     try {
-      // Update the stop status to skipped
+      const now = new Date();
       const { error } = await supabase
         .from("route_stops")
-        .update({ status: "skipped" })
+        .update({ 
+          status: "skipped",
+          visit_date: format(now, "yyyy-MM-dd"),
+          visit_time: format(now, "HH:mm:ss")
+        })
         .eq("id", stopId);
       
       if (error) throw error;
@@ -224,7 +223,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
         description: "Customer location has been marked as skipped",
       });
       
-      // Refresh the page to update the UI
       window.location.reload();
     } catch (error: any) {
       console.error("Error updating stop:", error.message);
@@ -455,7 +453,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                         )}
                       </div>
                       <div className="flex flex-col gap-2 ml-4">
-                        {/* Barcode scan button */}
                         {!stop.visited && stop.status === "pending" && (
                           <Button 
                             size="sm" 
@@ -467,7 +464,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                           </Button>
                         )}
                         
-                        {/* Create order button */}
                         {(stop.visited || stop.status === "pending") && stop.status !== "completed" && (
                           <Button 
                             size="sm" 
@@ -478,7 +474,6 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                           </Button>
                         )}
                         
-                        {/* Mark as skipped button */}
                         {stop.status === "pending" && (
                           <Button 
                             size="sm" 
