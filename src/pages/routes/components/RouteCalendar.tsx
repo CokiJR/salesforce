@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { cn } from "@/lib/utils";
-import { getCurrentWeekOfMonth } from "@/utils/routeScheduler";
 
 interface RouteCalendarProps {
   date: Date;
@@ -13,9 +12,16 @@ interface RouteCalendarProps {
 }
 
 export function RouteCalendar({ date, setDate }: RouteCalendarProps) {
-  const currentWeek = getCurrentWeekOfMonth();
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  
+  // Calculate week number of the selected date
+  const weekOfMonth = (() => {
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const dayOfMonth = date.getDate();
+    const weekOfMonth = Math.ceil((dayOfMonth + firstDayOfMonth.getDay() - 1) / 7);
+    return Math.min(weekOfMonth, 4); // Cap at 4
+  })();
   
   return (
     <div className="flex items-center space-x-2 mb-4">
@@ -47,7 +53,7 @@ export function RouteCalendar({ date, setDate }: RouteCalendarProps) {
         </PopoverContent>
       </Popover>
       <div className="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium">
-        Week {currentWeek} of the month
+        Week {weekOfMonth} of the month
       </div>
     </div>
   );

@@ -67,9 +67,9 @@ export function AutomatedRoutePanel({
     if (!customers.length) return;
     
     // Filter customers who should be visited this week based on their cycle
+    const weekNum = getCurrentWeekOfMonth();
+    
     const filteredCustomers = customers.filter(customer => {
-      const weekNum = getCurrentWeekOfMonth();
-      
       switch (customer.cycle) {
         case 'YYYY': // Visit every week
           return true;
@@ -111,12 +111,23 @@ export function AutomatedRoutePanel({
     }
   };
   
+  // Calculate the current week range for the selected date
+  const selectedWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+  const selectedWeekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  // Calculate the week number of the selected date, not just the current date
+  const selectedWeekOfMonth = (() => {
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const dayOfMonth = date.getDate();
+    const weekOfMonth = Math.ceil((dayOfMonth + firstDayOfMonth.getDay() - 1) / 7);
+    return Math.min(weekOfMonth, 4); // Cap at 4
+  })();
+  
   return (
     <div className="rounded-xl border p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Automated Route Planning</h3>
+        <h3 className="text-lg font-medium">Route Planning</h3>
         <div className="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium">
-          Week {weekOfMonth}
+          Week {selectedWeekOfMonth}
         </div>
       </div>
       
@@ -146,6 +157,15 @@ export function AutomatedRoutePanel({
           </Popover>
         </div>
         
+        <div className="p-4 rounded-lg bg-muted/50">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="font-medium">Selected Week</h4>
+            <span className="text-sm text-muted-foreground">
+              {format(selectedWeekStart, "MMM d")} - {format(selectedWeekEnd, "MMM d, yyyy")}
+            </span>
+          </div>
+        </div>
+        
         {existingRoute && (
           <div className="p-4 rounded-lg bg-yellow-100/50">
             <p className="text-sm text-amber-700">
@@ -165,13 +185,31 @@ export function AutomatedRoutePanel({
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : eligibleCustomers.length > 0 ? (
-            <div className="text-sm text-muted-foreground">
-              Based on customer visit cycles:
-              <ul className="mt-1 space-y-1 list-disc list-inside">
-                <li>YYYY: Every week</li>
-                <li>YTYT: Week 1 and 3</li>
-                <li>TYTY: Week 2 and 4</li>
-              </ul>
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">
+                Based on customer visit cycles:
+                <ul className="mt-1 space-y-1 list-disc list-inside">
+                  <li>YYYY: Every week</li>
+                  <li>YTYT: Week 1 and 3</li>
+                  <li>TYTY: Week 2 and 4</li>
+                </ul>
+              </div>
+              
+              <div className="max-h-40 overflow-y-auto mt-3">
+                <ul className="text-sm space-y-1">
+                  {eligibleCustomers.map(customer => (
+                    <li key={customer.id} className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-primary/20 flex-shrink-0"></span>
+                      <span>{customer.name}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {customer.cycle === 'YYYY' ? 'Every week' : 
+                         customer.cycle === 'YTYT' ? 'Week 1 & 3' : 
+                         customer.cycle === 'TYTY' ? 'Week 2 & 4' : customer.cycle}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No customers scheduled for this week.</p>
