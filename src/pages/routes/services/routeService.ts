@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Customer } from "@/types";
-import { format, startOfWeek } from "date-fns";
+import { Customer, DailyRoute } from "@/types";
+import { format, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 import { shouldVisitThisWeek } from "@/utils/routeScheduler";
 
 // Create an automated route based on customer visit cycles for the entire week
@@ -12,6 +12,22 @@ export async function createAutomatedRoute(
 ) {
   // Normalize to start of week to ensure consistency
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  
+  // First check if a route already exists for this week
+  const { data: existingRoutes, error: checkError } = await supabase
+    .from("daily_routes")
+    .select("*")
+    .eq("salesperson_id", salespersonId)
+    .gte("date", format(weekStart, "yyyy-MM-dd"))
+    .lte("date", format(weekEnd, "yyyy-MM-dd"));
+  
+  if (checkError) throw checkError;
+  
+  // If a route already exists for this week, return it
+  if (existingRoutes && existingRoutes.length > 0) {
+    return existingRoutes[0];
+  }
   
   // Step 1: Create the weekly route record
   const { data: newRoute, error: routeError } = await supabase

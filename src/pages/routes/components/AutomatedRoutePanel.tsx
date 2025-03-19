@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { getCurrentWeekOfMonth } from "@/utils/routeScheduler";
 import { Customer } from "@/types";
 import { createAutomatedRoute } from "../services/routeService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AutomatedRoutePanelProps {
   customers: Customer[];
@@ -30,9 +31,36 @@ export function AutomatedRoutePanel({
   const [date, setDate] = useState<Date>(new Date());
   const [isCreating, setIsCreating] = useState(false);
   const [eligibleCustomers, setEligibleCustomers] = useState<Customer[]>([]);
+  const [existingRoute, setExistingRoute] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuthentication();
   const weekOfMonth = getCurrentWeekOfMonth();
+  
+  // Check if a route already exists for this week
+  useEffect(() => {
+    const checkExistingRoute = async () => {
+      if (!user) return;
+      
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+      
+      const { data, error } = await supabase
+        .from("daily_routes")
+        .select("id")
+        .eq("salesperson_id", user.id)
+        .gte("date", format(weekStart, "yyyy-MM-dd"))
+        .lte("date", format(weekEnd, "yyyy-MM-dd"));
+      
+      if (error) {
+        console.error("Error checking existing routes:", error);
+        return;
+      }
+      
+      setExistingRoute(data && data.length > 0);
+    };
+    
+    checkExistingRoute();
+  }, [date, user]);
   
   // Filter customers based on cycle pattern for the selected date
   useEffect(() => {
@@ -62,11 +90,12 @@ export function AutomatedRoutePanel({
     
     try {
       setIsCreating(true);
-      await createAutomatedRoute(date, user.id, eligibleCustomers);
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const createdRoute = await createAutomatedRoute(weekStart, user.id, eligibleCustomers);
       
       toast({
         title: "Route created",
-        description: `Automated route for ${format(date, "MMMM d, yyyy")} has been created.`,
+        description: `Weekly route for ${format(weekStart, "MMMM d")} - ${format(endOfWeek(weekStart, { weekStartsOn: 1 }), "MMMM d, yyyy")} has been created.`,
       });
       
       onRouteCreated();
@@ -117,6 +146,14 @@ export function AutomatedRoutePanel({
           </Popover>
         </div>
         
+        {existingRoute && (
+          <div className="p-4 rounded-lg bg-yellow-100/50">
+            <p className="text-sm text-amber-700">
+              A route already exists for this week. Creating a new route will not be possible.
+            </p>
+          </div>
+        )}
+        
         <div className="p-4 rounded-lg bg-muted/50">
           <div className="flex justify-between items-center mb-2">
             <h4 className="font-medium">Customers to Visit</h4>
@@ -143,7 +180,7 @@ export function AutomatedRoutePanel({
         
         <Button 
           onClick={handleCreateAutomatedRoute} 
-          disabled={isCreating || eligibleCustomers.length === 0}
+          disabled={isCreating || eligibleCustomers.length === 0 || existingRoute}
           className="w-full"
         >
           {isCreating ? (
@@ -151,10 +188,15 @@ export function AutomatedRoutePanel({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating...
             </>
+          ) : existingRoute ? (
+            <>
+              <Route className="mr-2 h-4 w-4" />
+              Route Already Exists
+            </>
           ) : (
             <>
               <Route className="mr-2 h-4 w-4" />
-              Generate Automated Route
+              Generate Weekly Route
             </>
           )}
         </Button>

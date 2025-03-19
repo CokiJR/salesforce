@@ -71,9 +71,9 @@ export function useRoutes(date: Date) {
             status: stop.status as "pending" | "completed" | "skipped" | "not_ordered",
             notes: stop.notes || "",
             route_id: stop.route_id,
-            coverage_status: stop.coverage_status || "Cover Location", // Add missing field
-            barcode_scanned: stop.barcode_scanned || false, // Add missing field
-            visited: stop.visited || false // Add missing field
+            coverage_status: stop.coverage_status || "Cover Location", 
+            barcode_scanned: stop.barcode_scanned || false,
+            visited: stop.visited || false
           };
         }) || [];
 
