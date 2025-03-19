@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -127,7 +128,7 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
   };
 
   const handleCreateOrder = (customerId: string, stopId: string) => {
-    navigate(`/dashboard/orders/add?customer=${customerId}&route_stop_id=${stopId}`);
+    navigate(`/dashboard/orders/add?customer=${customerId}&stop=${stopId}`);
   };
 
   const handleScanBarcode = (stopId: string) => {
@@ -464,7 +465,8 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
                           </Button>
                         )}
                         
-                        {(stop.visited || stop.status === "pending") && stop.status !== "completed" && (
+                        {/* Only show Order button if status is not completed */}
+                        {stop.status !== "completed" && (
                           <Button 
                             size="sm" 
                             onClick={() => handleCreateOrder(stop.customer_id, stop.id)}

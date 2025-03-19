@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // Order form schema
 const orderSchema = z.object({
@@ -48,6 +49,7 @@ interface OrderFormProps {
   onCancel: () => void;
   hasOrderItems: boolean;
   preselectedCustomer?: string | null;
+  readOnlyCustomer?: boolean;
 }
 
 export function OrderForm({ 
@@ -57,7 +59,8 @@ export function OrderForm({
   orderItemsComponent,
   onCancel,
   hasOrderItems,
-  preselectedCustomer
+  preselectedCustomer,
+  readOnlyCustomer = false
 }: OrderFormProps) {
   // Initialize the form
   const form = useForm<OrderFormValues>({
@@ -76,6 +79,13 @@ export function OrderForm({
     }
   }, [preselectedCustomer, form]);
   
+  // Find the customer name for display when in read-only mode
+  const getCustomerName = () => {
+    if (!preselectedCustomer) return "";
+    const customer = customers.find(c => c.id === preselectedCustomer);
+    return customer ? customer.name : "";
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -86,20 +96,32 @@ export function OrderForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Customer</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                {readOnlyCustomer ? (
+                  // Show a read-only input when customer is pre-selected from route
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
+                    <Input 
+                      value={getCustomerName()}
+                      readOnly
+                      className="bg-gray-100"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                ) : (
+                  // Show the dropdown when customer is not pre-selected
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select customer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}

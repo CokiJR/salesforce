@@ -132,11 +132,14 @@ export default function AddOrder() {
       
       // If this came from a route stop, update the stop status to completed
       if (routeStopId) {
+        const now = new Date();
         const { error: stopError } = await supabase
           .from("route_stops")
           .update({ 
             status: "completed",
-            visited: true
+            visited: true,
+            visit_date: format(now, "yyyy-MM-dd"),
+            visit_time: format(now, "HH:mm:ss")
           })
           .eq("id", routeStopId);
         
@@ -203,6 +206,7 @@ export default function AddOrder() {
             onCancel={() => navigate(-1)}
             hasOrderItems={orderItems.length > 0}
             preselectedCustomer={preselectedCustomer}
+            readOnlyCustomer={!!routeStopId} // Make customer field read-only when coming from route
             orderItemsComponent={
               <OrderItemsTable
                 orderItems={orderItems}
