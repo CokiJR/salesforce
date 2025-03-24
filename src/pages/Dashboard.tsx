@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, Users, Package, Map, ShoppingCart, CalendarDays } from "lucide-react";
 import SyncManager from "@/components/sync/SyncManager";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useAuthentication();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     customers: 0,
     products: 0,
@@ -79,6 +81,12 @@ const Dashboard = () => {
     }
   };
 
+  // Navigation handlers for each card
+  const navigateToCustomers = () => navigate("/dashboard/customers");
+  const navigateToProducts = () => navigate("/dashboard/products");
+  const navigateToOrders = () => navigate("/dashboard/orders");
+  const navigateToRoutes = () => navigate("/dashboard/routes");
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -89,7 +97,10 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" 
+          onClick={navigateToCustomers}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Customers
@@ -104,7 +115,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" 
+          onClick={navigateToProducts}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Products
@@ -119,7 +133,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" 
+          onClick={navigateToOrders}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Orders
@@ -134,7 +151,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" 
+          onClick={navigateToRoutes}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Routes
