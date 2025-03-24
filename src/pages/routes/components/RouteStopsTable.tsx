@@ -19,15 +19,17 @@ type RouteStop = {
   visit_date?: string;
   notes?: string;
   coverage_status?: string;
+  status?: "pending" | "completed" | "skipped" | "not_ordered";
 };
 
 interface RouteStopsTableProps {
   stops: RouteStop[];
   onRemoveStop: (index: number) => void;
+  onBackorder?: (index: number) => void;
   showCoverageStatus?: boolean;
 }
 
-export function RouteStopsTable({ stops, onRemoveStop, showCoverageStatus = false }: RouteStopsTableProps) {
+export function RouteStopsTable({ stops, onRemoveStop, onBackorder, showCoverageStatus = false }: RouteStopsTableProps) {
   const getCoverageStatusColor = (status?: string) => {
     return status === "Cover Location" 
       ? "bg-green-100 text-green-800" 
@@ -80,16 +82,18 @@ export function RouteStopsTable({ stops, onRemoveStop, showCoverageStatus = fals
               {showCoverageStatus && (
                 <TableCell>
                   <Badge className={getCoverageStatusColor(stop.coverage_status)}>
-                    {stop.coverage_status || "Cover Location"}
+                    {stop.coverage_status || "Covered"}
                   </Badge>
                 </TableCell>
               )}
               <TableCell>
-                {stop.visit_date && stop.visit_time ? (
+                {stop.visit_date && stop.status === "completed" && stop.visit_time ? (
                   <div className="text-sm">
                     <div>Date: {format(new Date(stop.visit_date), "MMM d, yyyy")}</div>
                     <div>Time: {stop.visit_time}</div>
                   </div>
+                ) : stop.status === "skipped" ? (
+                  <span className="text-muted-foreground text-sm">Skipped</span>
                 ) : (
                   <span className="text-muted-foreground text-sm">Not visited yet</span>
                 )}
@@ -97,7 +101,17 @@ export function RouteStopsTable({ stops, onRemoveStop, showCoverageStatus = fals
               <TableCell className="max-w-[200px] truncate">
                 {stop.notes || "-"}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right flex justify-end gap-2">
+                {stop.status === "completed" && onBackorder && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onBackorder(index)}
+                    className="h-8"
+                  >
+                    Backorder
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="icon" 

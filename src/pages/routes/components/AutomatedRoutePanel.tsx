@@ -176,8 +176,8 @@ export function AutomatedRoutePanel({
         
         <div className="p-4 rounded-lg bg-muted/50">
           <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium">Customers to Visit</h4>
-            <span className="text-sm text-muted-foreground">{eligibleCustomers.length} customers</span>
+            <h4 className="font-medium">Route Summary</h4>
+            <span className="text-sm text-muted-foreground">{eligibleCustomers.length} customers eligible</span>
           </div>
           
           {loading ? (
@@ -192,22 +192,6 @@ export function AutomatedRoutePanel({
                   <li>YYYY: Every week</li>
                   <li>YTYT: Week 1 and 3</li>
                   <li>TYTY: Week 2 and 4</li>
-                </ul>
-              </div>
-              
-              <div className="max-h-40 overflow-y-auto mt-3">
-                <ul className="text-sm space-y-1">
-                  {eligibleCustomers.map(customer => (
-                    <li key={customer.id} className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full bg-primary/20 flex-shrink-0"></span>
-                      <span>{customer.name}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">
-                        {customer.cycle === 'YYYY' ? 'Every week' : 
-                         customer.cycle === 'YTYT' ? 'Week 1 & 3' : 
-                         customer.cycle === 'TYTY' ? 'Week 2 & 4' : customer.cycle}
-                      </span>
-                    </li>
-                  ))}
                 </ul>
               </div>
             </div>

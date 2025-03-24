@@ -19,6 +19,8 @@ export interface Customer {
   cycle: string; // Added cycle field for visit scheduling
   created_at: string;
   location?: { lat: number; lng: number };
+  due_date?: string; // Date when payment is due
+  bank_account?: string; // Bank account for payment validation
 }
 
 export interface Product {

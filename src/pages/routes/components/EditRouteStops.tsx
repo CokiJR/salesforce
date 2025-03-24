@@ -13,7 +13,7 @@ import { format } from "date-fns";
 
 interface EditRouteStopsProps {
   stops: RouteStop[];
-  onStatusChange: (stopId: string, status: "pending" | "completed" | "skipped") => void;
+  onStatusChange: (stopId: string, status: "pending" | "completed" | "skipped" | "not_ordered") => void;
   onNotesChange: (stopId: string, notes: string) => void;
 }
 
@@ -64,6 +64,7 @@ export const EditRouteStops = ({
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="skipped">Skipped</SelectItem>
+                      <SelectItem value="not_ordered">Backorder</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

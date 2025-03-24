@@ -82,7 +82,7 @@ export const useRouteEdit = () => {
   }, [id]);
 
   // Handle status change for a stop
-  const handleStatusChange = (stopId: string, status: "pending" | "completed" | "skipped") => {
+  const handleStatusChange = (stopId: string, status: "pending" | "completed" | "skipped" | "not_ordered") => {
     setStops(prevStops => 
       prevStops.map(stop => {
         if (stop.id === stopId) {
@@ -172,6 +172,23 @@ export const useRouteEdit = () => {
     }
   };
 
+  // Handle backorder for a stop
+  const handleBackorder = (stopId: string) => {
+    setStops(prevStops => 
+      prevStops.map(stop => {
+        if (stop.id === stopId) {
+          return { ...stop, status: "not_ordered" };
+        }
+        return stop;
+      })
+    );
+    
+    toast({
+      title: "Backorder created",
+      description: `Stop has been set for backorder`,
+    });
+  };
+
   return {
     id,
     route,
@@ -182,6 +199,7 @@ export const useRouteEdit = () => {
     handleStatusChange,
     handleNotesChange,
     handleMarkAllCompleted,
+    handleBackorder,
     handleSave
   };
 };

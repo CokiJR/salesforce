@@ -53,6 +53,31 @@ export function StopsList({ stops, onScanBarcode }: StopsListProps) {
     }
   };
 
+  const handleBackorder = async (stopId: string) => {
+    try {
+      const { error } = await supabase
+        .from("route_stops")
+        .update({ status: "skipped" })
+        .eq("id", stopId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Backorder created",
+        description: "Customer has been set for backorder",
+      });
+      
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error creating backorder:", error.message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to create backorder: ${error.message}`,
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -60,7 +85,7 @@ export function StopsList({ stops, onScanBarcode }: StopsListProps) {
       case "skipped":
         return "bg-yellow-100 text-yellow-800";
       case "not_ordered":
-        return "bg-blue-100 text-blue-800";
+        return "bg-purple-100 text-purple-800";
       default:
         return "bg-blue-100 text-blue-800";
     }
@@ -148,6 +173,17 @@ export function StopsList({ stops, onScanBarcode }: StopsListProps) {
                     >
                       X
                       Skip
+                    </Button>
+                  )}
+                  
+                  {/* Add Backorder button for completed stops */}
+                  {stop.status === "completed" && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleBackorder(stop.id)}
+                    >
+                      Backorder
                     </Button>
                   )}
                 </div>

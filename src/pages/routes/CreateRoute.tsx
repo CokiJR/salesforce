@@ -1,27 +1,26 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { Customer } from "@/types";
+import { Customer, RouteStop } from "@/types";
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useRouteData } from "./hooks/useRouteData";
 import { RouteForm, RouteFormValues } from "./components/RouteForm";
 import { AddStopForm } from "./components/AddStopForm";
 import { RouteStopsTable } from "./components/RouteStopsTable";
 import { RouteSummaryPanel } from "./components/RouteSummaryPanel";
 
-// Stop schema type
-type RouteStop = {
-  customer_id: string;
-  customer: Customer;
-  visit_time: string;
-  notes?: string;
-  coverage_status: string;
-};
+// Using RouteStop type imported from @/types
 
 export default function CreateRoute() {
   const { user } = useAuthentication();
@@ -50,12 +49,18 @@ export default function CreateRoute() {
       return;
     }
     
-    const newStop = {
+    const newStop: RouteStop = {
+      id: "", // This will be assigned by the database
       customer_id: customer.id,
       customer: customer,
       visit_time: visitTime,
-      notes: notes,
-      coverage_status: "Cover Location"
+      visit_date: "", // This will be set during submission
+      notes: notes || "",
+      coverage_status: "Covered",
+      status: "pending",
+      route_id: "", // This will be assigned during submission
+      barcode_scanned: false,
+      visited: false
     };
     
     setStops([...stops, newStop]);
@@ -69,6 +74,23 @@ export default function CreateRoute() {
     const newStops = [...stops];
     newStops.splice(index, 1);
     setStops(newStops);
+  };
+
+  const handleBackorder = (index: number) => {
+    setStops(stops.map((stop, i) => {
+      if (i === index) {
+        return { 
+          ...stop, 
+          status: "not_ordered" as "pending" | "completed" | "skipped" | "not_ordered"
+        };
+      }
+      return stop;
+    }));
+    
+    toast({
+      title: "Backorder created",
+      description: `${stops[index].customer.name} has been set for backorder`,
+    });
   };
 
   // Handle form submission
@@ -177,6 +199,7 @@ export default function CreateRoute() {
                 <RouteStopsTable
                   stops={stops}
                   onRemoveStop={handleRemoveStop}
+                  onBackorder={handleBackorder}
                   showCoverageStatus={true}
                 />
               </>

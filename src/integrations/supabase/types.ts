@@ -9,6 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      collections: {
+        Row: {
+          id: string
+          customer_id: string
+          amount: number
+          due_date: string
+          payment_date: string | null
+          status: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+          bank_account: string | null
+          transaction_id: string | null
+          sync_status: string | null
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          amount: number
+          due_date: string
+          payment_date?: string | null
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          bank_account?: string | null
+          transaction_id?: string | null
+          sync_status?: string | null
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          amount?: number
+          due_date?: string
+          payment_date?: string | null
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          bank_account?: string | null
+          transaction_id?: string | null
+          sync_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       customers: {
         Row: {
           address: string

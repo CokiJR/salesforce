@@ -47,19 +47,26 @@ export async function createAutomatedRoute(
     a.name.localeCompare(b.name)
   );
   
+  // Filter customers who should be visited this week based on their cycle
+  const customersToVisit = sortedCustomers.filter(customer => shouldVisitThisWeek(customer));
+  
   // For weekly routes, we spread customers throughout the week
-  // Each customer is initially added with no specific visit time
-  // Visit date and time will be set automatically when the visit happens
-  const routeStopsData = sortedCustomers.map((customer) => {
+  // Each customer is initially added with a default visit date and time
+  // These can be updated when the actual visit happens
+  const routeStopsData = customersToVisit.map((customer) => {
     return {
       route_id: newRoute.id,
       customer_id: customer.id,
-      visit_date: null, // Will be set when the outlet is visited or skipped
-      visit_time: null, // Will be set when the outlet is visited or skipped
+      visit_date: format(weekStart, "yyyy-MM-dd"), // Set default visit date to the start of the week
+      visit_time: "09:00:00", // Set default visit time
       status: "pending",
-      notes: `Scheduled for weekly visit (${customer.cycle} cycle)`
+      notes: `Scheduled for weekly visit (${customer.cycle} cycle)`,
+      coverage_status: "Covered",
+      barcode_scanned: false,
+      visited: false
     };
   });
+
   
   if (routeStopsData.length > 0) {
     const { error: stopsError } = await supabase
