@@ -55,4 +55,3 @@ export const convertUuidToCustomerId = (uuid: string, baseNumber: number): strin
 export const generateUuid = (): string => {
   return uuidv4();
 };
-
