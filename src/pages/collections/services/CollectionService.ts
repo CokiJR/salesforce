@@ -32,7 +32,7 @@ export class CollectionService {
           lng: Number((item.customer.location as any).lng || 0)
         } : undefined
       } : undefined
-    }));
+    })) as Collection[];
   }
   
   /**
@@ -57,7 +57,7 @@ export class CollectionService {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           
           // Validate and transform data
-          const collectionsToCreate: Omit<Collection, 'id' | 'created_at' | 'updated_at'>[] = [];
+          const collectionsToCreate: Partial<Collection>[] = [];
           
           for (const row of jsonData as any[]) {
             // Validate required fields
@@ -75,7 +75,7 @@ export class CollectionService {
               bank_account: row.bank_account || null
             };
             
-            collectionsToCreate.push(collection as any);
+            collectionsToCreate.push(collection);
           }
           
           // Batch insert collections
@@ -95,9 +95,9 @@ export class CollectionService {
             status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
             created_at: item.created_at || new Date().toISOString(),
             updated_at: item.updated_at || new Date().toISOString()
-          }));
+          })) as Collection[];
           
-          resolve(typedCollections as Collection[]);
+          resolve(typedCollections);
         } catch (error: any) {
           console.error('Error processing Excel file:', error);
           reject(error);
@@ -141,7 +141,7 @@ export class CollectionService {
           lng: Number((item.customer.location as any).lng || 0)
         } : undefined
       } : undefined
-    }));
+    })) as Collection[];
   }
 
   static async createCollection(collection: Omit<Collection, 'id' | 'created_at' | 'updated_at'>): Promise<Collection> {
@@ -228,7 +228,7 @@ export class CollectionService {
         lat: Number((customer.location as any).lat || 0),
         lng: Number((customer.location as any).lng || 0)
       } : undefined
-    }));
+    })) as Customer[];
   }
   
   /**
@@ -288,7 +288,7 @@ export class CollectionService {
           lng: Number((item.customer.location as any).lng || 0)
         } : undefined
       } : undefined
-    }));
+    })) as Collection[];
   }
   
   /**
@@ -339,7 +339,7 @@ export class CollectionService {
           lng: Number((item.customer.location as any).lng || 0)
         } : undefined
       } : undefined
-    }));
+    })) as Collection[];
   }
   
   /**
@@ -382,7 +382,7 @@ export class CollectionService {
           lng: Number((item.customer.location as any).lng || 0)
         } : undefined
       } : undefined
-    }));
+    })) as Collection[];
   }
   
   /**

@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -21,7 +22,7 @@ export interface Customer {
   payment_term_description?: string; // Payment term description
   bank_account?: string; // Bank account for payment validation
   uuid?: string; // UUID field from database
-  location?: { lat: number; lng: number };
+  location?: { lat: number; lng: number; };
   due_date?: string; // Date when payment is due
 }
 

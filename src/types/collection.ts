@@ -16,6 +16,7 @@ export interface Collection {
   transaction_id?: string;
   transaction?: Transaction;
   sync_status?: string;
+  order_id?: string;
 }
 
 export interface CollectionFilters {
