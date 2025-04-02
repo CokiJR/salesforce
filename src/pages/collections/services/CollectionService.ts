@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Collection, CollectionFilters, Customer } from "@/types";
+import { Customer } from "@/types";
+import { Collection, CollectionFilters } from "@/types/collection";
 import { toast } from "@/components/ui/use-toast";
 
 // Helper function to transform raw Supabase data to Collection objects

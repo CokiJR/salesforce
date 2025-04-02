@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -21,11 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { generateNextCustomerId } from "./utils/customerIdUtils";
+import { generateNextCustomerId, generateUuid } from "./utils/customerIdUtils";
 import { paymentTerms } from "./utils/paymentTerms";
 import { bankAccounts } from "./utils/bankAccounts";
 
-// Define the validation schema
 const customerSchema = z.object({
   name: z.string().min(2, { message: "Customer name must be at least 2 characters" }),
   contact_person: z.string().min(2, { message: "Contact person name is required" }),
@@ -49,7 +47,6 @@ export default function AddCustomer() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Fetch the last customer ID to generate the next one
   useEffect(() => {
     const fetchLastCustomerId = async () => {
       try {
@@ -66,7 +63,6 @@ export default function AddCustomer() {
         setNextCustomerId(nextId);
       } catch (error: any) {
         console.error("Error fetching last customer ID:", error.message);
-        // Default to C1010001 if there's an error
         setNextCustomerId("C1010001");
       }
     };
@@ -89,12 +85,13 @@ export default function AddCustomer() {
     try {
       setIsSubmitting(true);
       
-      // Find payment term description
       const paymentTermObj = paymentTerms.find(term => term.code === data.payment_term);
       
-      // Create a customerData object with the shape expected by Supabase
+      const dbId = generateUuid();
+      
       const customerData = {
-        id: nextCustomerId, // Use our custom ID format
+        id: dbId,
+        uuid: nextCustomerId,
         name: data.name,
         contact_person: data.contact_person,
         email: data.email,
@@ -122,7 +119,6 @@ export default function AddCustomer() {
         description: `${data.name} has been added with ID ${nextCustomerId}.`,
       });
       
-      // Navigate back to customers list
       navigate("/dashboard/customers");
       
     } catch (error: any) {

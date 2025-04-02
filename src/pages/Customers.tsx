@@ -45,6 +45,8 @@ const Customers = () => {
         ...customer,
         status: customer.status as "active" | "inactive",
         cycle: customer.cycle || "YYYY",
+        // Use uuid field as display ID if available, otherwise use database id
+        id: customer.uuid || customer.id,
         // Convert JSON location to the expected format if it exists
         location: customer.location ? {
           lat: Number((customer.location as any).lat || 0),

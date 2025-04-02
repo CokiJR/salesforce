@@ -2,6 +2,7 @@
 /**
  * Utility functions for handling customer IDs
  */
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Generate a new customer ID in the format C1010001, C1010002, etc.
@@ -46,3 +47,12 @@ export const isUuid = (id: string): boolean => {
 export const convertUuidToCustomerId = (uuid: string, baseNumber: number): string => {
   return `C${1010000 + baseNumber}`;
 };
+
+/**
+ * Generate a UUID for database storage while keeping track of our custom ID
+ * @returns A UUID for database storage
+ */
+export const generateUuid = (): string => {
+  return uuidv4();
+};
+
