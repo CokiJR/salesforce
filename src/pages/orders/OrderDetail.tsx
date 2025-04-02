@@ -42,7 +42,7 @@ const OrderDetail = () => {
         if (itemsError) throw itemsError;
         
         // Map and prepare the order data
-        const customer = orderData.customer as Customer;
+        const customer = orderData.customer as any;
         const items = itemsData.map((item: any) => ({
           ...item,
           product: item.product as Product
@@ -57,11 +57,14 @@ const OrderDetail = () => {
             ...customer,
             cycle: customer.cycle || "YYYY",
             status: customer.status as "active" | "inactive",
+            payment_term: customer.payment_term || undefined,
+            payment_term_description: customer.payment_term_description || undefined,
+            bank_account: customer.bank_account || undefined,
             location: customer.location ? {
               lat: Number((customer.location as any).lat || 0),
               lng: Number((customer.location as any).lng || 0)
             } : undefined
-          },
+          } as Customer,
           items,
           notes: orderData.notes || ""
         };

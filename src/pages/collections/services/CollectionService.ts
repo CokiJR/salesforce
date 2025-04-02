@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Collection, CollectionFilters } from '@/types/collection';
 import { Customer } from '@/types';
@@ -22,10 +21,16 @@ export class CollectionService {
     // Type cast the data to match our Collection interface
     return (data || []).map(item => ({
       ...item,
-      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
       customer: item.customer ? {
         ...item.customer,
-        status: (item.customer.status as 'active' | 'inactive')
+        status: (item.customer.status || 'active') as 'active' | 'inactive',
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined
       } : undefined
     }));
   }
@@ -70,7 +75,7 @@ export class CollectionService {
               bank_account: row.bank_account || null
             };
             
-            collectionsToCreate.push(collection);
+            collectionsToCreate.push(collection as any);
           }
           
           // Batch insert collections
@@ -87,10 +92,12 @@ export class CollectionService {
           // Ensure returned data matches Collection type
           const typedCollections = (insertedData || []).map(item => ({
             ...item,
-            status: item.status as 'pending' | 'overdue' | 'paid' | 'canceled'
+            status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+            created_at: item.created_at || new Date().toISOString(),
+            updated_at: item.updated_at || new Date().toISOString()
           }));
           
-          resolve(typedCollections);
+          resolve(typedCollections as Collection[]);
         } catch (error: any) {
           console.error('Error processing Excel file:', error);
           reject(error);
@@ -123,10 +130,16 @@ export class CollectionService {
     // Type cast the data to match our Collection interface
     return (data || []).map(item => ({
       ...item,
-      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
       customer: item.customer ? {
         ...item.customer,
-        status: (item.customer.status as 'active' | 'inactive')
+        status: (item.customer.status || 'active') as 'active' | 'inactive',
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined
       } : undefined
     }));
   }
@@ -145,8 +158,10 @@ export class CollectionService {
 
     return {
       ...data,
-      status: (data.status as 'pending' | 'overdue' | 'paid' | 'canceled')
-    };
+      status: (data.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString()
+    } as Collection;
   }
 
   static async updateCollection(id: string, updates: Partial<Collection>): Promise<Collection> {
@@ -164,8 +179,10 @@ export class CollectionService {
 
     return {
       ...data,
-      status: (data.status as 'pending' | 'overdue' | 'paid' | 'canceled')
-    };
+      status: (data.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString()
+    } as Collection;
   }
 
   static async deleteCollection(id: string): Promise<void> {
@@ -206,7 +223,7 @@ export class CollectionService {
 
     return (data || []).map(customer => ({
       ...customer,
-      status: customer.status as 'active' | 'inactive',
+      status: (customer.status || 'active') as 'active' | 'inactive',
       location: customer.location ? {
         lat: Number((customer.location as any).lat || 0),
         lng: Number((customer.location as any).lng || 0)
@@ -260,10 +277,16 @@ export class CollectionService {
     // Type cast the data to match our Collection interface
     return (data || []).map(item => ({
       ...item,
-      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
       customer: item.customer ? {
         ...item.customer,
-        status: (item.customer.status as 'active' | 'inactive')
+        status: (item.customer.status || 'active') as 'active' | 'inactive',
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined
       } : undefined
     }));
   }
@@ -305,10 +328,16 @@ export class CollectionService {
     // Type cast the data to match our Collection interface
     return (data || []).map(item => ({
       ...item,
-      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
       customer: item.customer ? {
         ...item.customer,
-        status: (item.customer.status as 'active' | 'inactive')
+        status: (item.customer.status || 'active') as 'active' | 'inactive',
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined
       } : undefined
     }));
   }
@@ -342,10 +371,16 @@ export class CollectionService {
     // Type cast the data to match our Collection interface
     return (data || []).map(item => ({
       ...item,
-      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      status: (item.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
       customer: item.customer ? {
         ...item.customer,
-        status: (item.customer.status as 'active' | 'inactive')
+        status: (item.customer.status || 'active') as 'active' | 'inactive',
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined
       } : undefined
     }));
   }
@@ -421,11 +456,7 @@ export class CollectionService {
       throw new Error(fetchError.message);
     }
     
-    // Note: The collection_visits table doesn't exist yet
-    // Instead of trying to create a visit in a non-existent table,
-    // we'll just update the collection with a sync_status
-    
-    // Update the collection with visit status
+    // Update the collection with visit status instead of trying to create a visit in a non-existent table
     return this.updateCollection(collectionId, {
       sync_status: 'visit_scheduled'
     });

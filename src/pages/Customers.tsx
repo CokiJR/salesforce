@@ -44,7 +44,7 @@ const Customers = () => {
       const typedCustomers: Customer[] = data?.map(customer => ({
         ...customer,
         status: customer.status as "active" | "inactive",
-        cycle: customer.cycle || "YYYY", // Add cycle field with default
+        cycle: customer.cycle || "YYYY",
         // Convert JSON location to the expected format if it exists
         location: customer.location ? {
           lat: Number((customer.location as any).lat || 0),
