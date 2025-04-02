@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Plus, Search, UserPlus } from "lucide-react";
+import { getPaymentTermDescription } from "./customers/utils/paymentTerms";
 
 const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);

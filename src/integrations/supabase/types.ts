@@ -54,6 +54,7 @@ export type Database = {
       customers: {
         Row: {
           address: string
+          bank_account: string | null
           city: string
           contact_person: string
           created_at: string
@@ -63,12 +64,14 @@ export type Database = {
           location: Json | null
           name: string
           payment_term: string | null
+          payment_term_description: string | null
           phone: string
           status: string
           uuid: string | null
         }
         Insert: {
           address: string
+          bank_account?: string | null
           city: string
           contact_person: string
           created_at?: string
@@ -78,12 +81,14 @@ export type Database = {
           location?: Json | null
           name: string
           payment_term?: string | null
+          payment_term_description?: string | null
           phone: string
           status: string
           uuid?: string | null
         }
         Update: {
           address?: string
+          bank_account?: string | null
           city?: string
           contact_person?: string
           created_at?: string
@@ -93,6 +98,7 @@ export type Database = {
           location?: Json | null
           name?: string
           payment_term?: string | null
+          payment_term_description?: string | null
           phone?: string
           status?: string
           uuid?: string | null
