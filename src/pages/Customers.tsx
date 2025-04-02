@@ -49,9 +49,9 @@ const Customers = () => {
           lat: Number((customer.location as any).lat || 0),
           lng: Number((customer.location as any).lng || 0)
         } : undefined,
-        payment_term: customer.payment_term,
-        payment_term_description: customer.payment_term_description,
-        bank_account: customer.bank_account
+        payment_term: customer.payment_term || undefined,
+        payment_term_description: customer.payment_term_description || undefined,
+        bank_account: customer.bank_account || undefined
       })) || [];
       
       setCustomers(typedCustomers);

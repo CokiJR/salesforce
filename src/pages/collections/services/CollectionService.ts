@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Collection, CollectionFilters } from '@/types/collection';
 import { Customer } from '@/types';
@@ -18,7 +19,15 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Type cast the data to match our Collection interface
+    return (data || []).map(item => ({
+      ...item,
+      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      customer: item.customer ? {
+        ...item.customer,
+        status: (item.customer.status as 'active' | 'inactive')
+      } : undefined
+    }));
   }
   
   /**
@@ -45,7 +54,7 @@ export class CollectionService {
           // Validate and transform data
           const collectionsToCreate: Omit<Collection, 'id' | 'created_at' | 'updated_at'>[] = [];
           
-          for (const row of jsonData) {
+          for (const row of jsonData as any[]) {
             // Validate required fields
             if (!row.customer_id || !row.amount || !row.due_date) {
               throw new Error('Missing required fields in Excel data');
@@ -56,7 +65,7 @@ export class CollectionService {
               customer_id: String(row.customer_id),
               amount: Number(row.amount),
               due_date: new Date(row.due_date).toISOString(),
-              status: row.status || 'pending',
+              status: (row.status || 'pending') as 'pending' | 'overdue' | 'paid' | 'canceled',
               notes: row.notes || '',
               bank_account: row.bank_account || null
             };
@@ -65,7 +74,7 @@ export class CollectionService {
           }
           
           // Batch insert collections
-          const { data, error } = await supabase
+          const { data: insertedData, error } = await supabase
             .from('collections')
             .insert(collectionsToCreate)
             .select();
@@ -75,7 +84,13 @@ export class CollectionService {
             throw new Error(error.message);
           }
           
-          resolve(data || []);
+          // Ensure returned data matches Collection type
+          const typedCollections = (insertedData || []).map(item => ({
+            ...item,
+            status: item.status as 'pending' | 'overdue' | 'paid' | 'canceled'
+          }));
+          
+          resolve(typedCollections);
         } catch (error: any) {
           console.error('Error processing Excel file:', error);
           reject(error);
@@ -105,7 +120,15 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Type cast the data to match our Collection interface
+    return (data || []).map(item => ({
+      ...item,
+      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      customer: item.customer ? {
+        ...item.customer,
+        status: (item.customer.status as 'active' | 'inactive')
+      } : undefined
+    }));
   }
 
   static async createCollection(collection: Omit<Collection, 'id' | 'created_at' | 'updated_at'>): Promise<Collection> {
@@ -120,7 +143,10 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    return data;
+    return {
+      ...data,
+      status: (data.status as 'pending' | 'overdue' | 'paid' | 'canceled')
+    };
   }
 
   static async updateCollection(id: string, updates: Partial<Collection>): Promise<Collection> {
@@ -136,7 +162,10 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    return data;
+    return {
+      ...data,
+      status: (data.status as 'pending' | 'overdue' | 'paid' | 'canceled')
+    };
   }
 
   static async deleteCollection(id: string): Promise<void> {
@@ -175,7 +204,14 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    return (data || []).map(customer => ({
+      ...customer,
+      status: customer.status as 'active' | 'inactive',
+      location: customer.location ? {
+        lat: Number((customer.location as any).lat || 0),
+        lng: Number((customer.location as any).lng || 0)
+      } : undefined
+    }));
   }
   
   /**
@@ -221,7 +257,15 @@ export class CollectionService {
       throw new Error(error.message);
     }
     
-    return data || [];
+    // Type cast the data to match our Collection interface
+    return (data || []).map(item => ({
+      ...item,
+      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      customer: item.customer ? {
+        ...item.customer,
+        status: (item.customer.status as 'active' | 'inactive')
+      } : undefined
+    }));
   }
   
   /**
@@ -258,7 +302,15 @@ export class CollectionService {
       throw new Error(error.message);
     }
     
-    return data || [];
+    // Type cast the data to match our Collection interface
+    return (data || []).map(item => ({
+      ...item,
+      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      customer: item.customer ? {
+        ...item.customer,
+        status: (item.customer.status as 'active' | 'inactive')
+      } : undefined
+    }));
   }
   
   /**
@@ -287,7 +339,15 @@ export class CollectionService {
       throw new Error(error.message);
     }
     
-    return data || [];
+    // Type cast the data to match our Collection interface
+    return (data || []).map(item => ({
+      ...item,
+      status: (item.status as 'pending' | 'overdue' | 'paid' | 'canceled'),
+      customer: item.customer ? {
+        ...item.customer,
+        status: (item.customer.status as 'active' | 'inactive')
+      } : undefined
+    }));
   }
   
   /**
@@ -361,20 +421,9 @@ export class CollectionService {
       throw new Error(fetchError.message);
     }
     
-    // Create a visit record in a hypothetical 'collection_visits' table
-    const { error: visitError } = await supabase
-      .from('collection_visits')
-      .insert({
-        collection_id: collectionId,
-        scheduled_date: visitDate.toISOString(),
-        assigned_to: assignedTo,
-        status: 'scheduled'
-      });
-    
-    if (visitError) {
-      console.error('Error scheduling collection visit:', visitError);
-      throw new Error(visitError.message);
-    }
+    // Note: The collection_visits table doesn't exist yet
+    // Instead of trying to create a visit in a non-existent table,
+    // we'll just update the collection with a sync_status
     
     // Update the collection with visit status
     return this.updateCollection(collectionId, {

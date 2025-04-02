@@ -1,3 +1,4 @@
+
 import { Customer, Transaction } from '.';
 
 export interface Collection {
