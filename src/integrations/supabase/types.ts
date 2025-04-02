@@ -11,46 +11,28 @@ export type Database = {
     Tables: {
       collections: {
         Row: {
-          id: string
-          customer_id: string
           amount: number
-          due_date: string
-          payment_date: string | null
-          status: string
-          notes: string | null
-          created_at: string
-          updated_at: string
           bank_account: string | null
-          transaction_id: string | null
-          sync_status: string | null
+          customer_id: string
+          due_date: string
+          id: string
+          order_id: string | null
         }
         Insert: {
-          id?: string
-          customer_id: string
           amount: number
-          due_date: string
-          payment_date?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
           bank_account?: string | null
-          transaction_id?: string | null
-          sync_status?: string | null
+          customer_id: string
+          due_date: string
+          id?: string
+          order_id?: string | null
         }
         Update: {
-          id?: string
-          customer_id?: string
           amount?: number
-          due_date?: string
-          payment_date?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
           bank_account?: string | null
-          transaction_id?: string | null
-          sync_status?: string | null
+          customer_id?: string
+          due_date?: string
+          id?: string
+          order_id?: string | null
         }
         Relationships: [
           {
@@ -61,14 +43,14 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "collections_transaction_id_fkey"
-            columns: ["transaction_id"]
+            foreignKeyName: "collections_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "transactions"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
-      },
+      }
       customers: {
         Row: {
           address: string
@@ -80,8 +62,10 @@ export type Database = {
           id: string
           location: Json | null
           name: string
+          payment_term: string | null
           phone: string
           status: string
+          uuid: string | null
         }
         Insert: {
           address: string
@@ -93,8 +77,10 @@ export type Database = {
           id?: string
           location?: Json | null
           name: string
+          payment_term?: string | null
           phone: string
           status: string
+          uuid?: string | null
         }
         Update: {
           address?: string
@@ -106,8 +92,10 @@ export type Database = {
           id?: string
           location?: Json | null
           name?: string
+          payment_term?: string | null
           phone?: string
           status?: string
+          uuid?: string | null
         }
         Relationships: []
       }
@@ -406,7 +394,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_customer_id: {
+        Args: {
+          old_id: string
+          new_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -5,6 +5,7 @@ import { Customer } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { CustomerDetailView } from "./components/CustomerDetailView";
+import { isUuid } from "./utils/customerIdUtils";
 
 const CustomerDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,11 +18,17 @@ const CustomerDetail = () => {
       
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("customers")
-          .select("*")
-          .eq("id", id)
-          .single();
+        
+        let query = supabase.from("customers").select("*");
+        
+        // Handle both UUID and formatted customer IDs
+        if (isUuid(id)) {
+          query = query.eq("id", id);
+        } else {
+          query = query.eq("id", id);
+        }
+        
+        const { data, error } = await query.single();
         
         if (error) throw error;
         
@@ -33,7 +40,10 @@ const CustomerDetail = () => {
           location: data.location ? {
             lat: Number((data.location as any).lat || 0),
             lng: Number((data.location as any).lng || 0)
-          } : undefined
+          } : undefined,
+          payment_term: data.payment_term || undefined,
+          payment_term_description: data.payment_term_description || undefined,
+          bank_account: data.bank_account || undefined
         };
         
         setCustomer(typedCustomer);

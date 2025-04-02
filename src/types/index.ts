@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -21,6 +20,8 @@ export interface Customer {
   location?: { lat: number; lng: number };
   due_date?: string; // Date when payment is due
   bank_account?: string; // Bank account for payment validation
+  payment_term?: string; // Payment term code (Z000, Z007, etc.)
+  payment_term_description?: string; // Payment term description
 }
 
 export interface Product {

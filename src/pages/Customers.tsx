@@ -48,7 +48,10 @@ const Customers = () => {
         location: customer.location ? {
           lat: Number((customer.location as any).lat || 0),
           lng: Number((customer.location as any).lng || 0)
-        } : undefined
+        } : undefined,
+        payment_term: customer.payment_term,
+        payment_term_description: customer.payment_term_description,
+        bank_account: customer.bank_account
       })) || [];
       
       setCustomers(typedCustomers);
@@ -76,7 +79,8 @@ const Customers = () => {
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.contact_person.toLowerCase().includes(searchQuery.toLowerCase())
+    customer.contact_person.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.id && customer.id.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Function to get cycle description
@@ -122,6 +126,7 @@ const Customers = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Contact Person</TableHead>
                 <TableHead>City</TableHead>
@@ -136,7 +141,8 @@ const Customers = () => {
                   className="cursor-pointer hover:bg-muted/60"
                   onClick={() => handleCustomerDetails(customer.id)}
                 >
-                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="font-medium">{customer.id}</TableCell>
+                  <TableCell>{customer.name}</TableCell>
                   <TableCell>{customer.contact_person}</TableCell>
                   <TableCell>{customer.city}</TableCell>
                   <TableCell>
