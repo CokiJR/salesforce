@@ -2,7 +2,6 @@
 /**
  * Utility functions for handling customer IDs
  */
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Generate a new customer ID in the format C1010001, C1010002, etc.
@@ -29,6 +28,16 @@ export const generateNextCustomerId = (lastId: string | null): string => {
 };
 
 /**
+ * Check if a string looks like our custom customer ID format (C followed by numbers)
+ * @param id The string to check
+ * @returns True if the string matches our customer ID format
+ */
+export const isCustomerId = (id: string): boolean => {
+  const customerIdPattern = /^C\d+$/;
+  return customerIdPattern.test(id);
+};
+
+/**
  * Check if a string is a UUID
  * @param id The string to check
  * @returns True if the string is a UUID, false otherwise
@@ -36,22 +45,4 @@ export const generateNextCustomerId = (lastId: string | null): string => {
 export const isUuid = (id: string): boolean => {
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidPattern.test(id);
-};
-
-/**
- * Convert a UUID to our custom customer ID format
- * @param uuid The UUID to convert
- * @param baseNumber The starting number for the ID
- * @returns A customer ID in the format C1010001
- */
-export const convertUuidToCustomerId = (uuid: string, baseNumber: number): string => {
-  return `C${1010000 + baseNumber}`;
-};
-
-/**
- * Generate a UUID for database storage while keeping track of our custom ID
- * @returns A UUID for database storage
- */
-export const generateUuid = (): string => {
-  return uuidv4();
 };

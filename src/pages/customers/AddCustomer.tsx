@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { User, Mail, Building, Phone, MapPin, UserPlus, Calendar, CreditCard, BadgeDollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
+import { generateNextCustomerId } from "./utils/customerIdUtils";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { generateNextCustomerId, generateUuid } from "./utils/customerIdUtils";
+import { User, Mail, Building, Phone, MapPin, UserPlus, Calendar, CreditCard, BadgeDollarSign } from "lucide-react";
 import { paymentTerms } from "./utils/paymentTerms";
 import { bankAccounts } from "./utils/bankAccounts";
 
@@ -52,13 +51,14 @@ export default function AddCustomer() {
       try {
         const { data, error } = await supabase
           .from("customers")
-          .select("id")
-          .order("id", { ascending: false })
+          .select("uuid")
+          .not('uuid', 'is', null)
+          .order("uuid", { ascending: false })
           .limit(1);
         
         if (error) throw error;
         
-        const lastId = data && data.length > 0 ? data[0].id : null;
+        const lastId = data && data.length > 0 ? data[0].uuid : null;
         const nextId = generateNextCustomerId(lastId);
         setNextCustomerId(nextId);
       } catch (error: any) {
@@ -87,10 +87,7 @@ export default function AddCustomer() {
       
       const paymentTermObj = paymentTerms.find(term => term.code === data.payment_term);
       
-      const dbId = generateUuid();
-      
       const customerData = {
-        id: dbId,
         uuid: nextCustomerId,
         name: data.name,
         contact_person: data.contact_person,

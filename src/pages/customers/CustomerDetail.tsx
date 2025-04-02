@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Customer } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { CustomerDetailView } from "./components/CustomerDetailView";
-import { isUuid } from "./utils/customerIdUtils";
+import { isCustomerId } from "./utils/customerIdUtils";
 
 const CustomerDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,8 +22,8 @@ const CustomerDetail = () => {
         let query = supabase.from("customers").select("*");
         
         // Handle both UUID and formatted customer IDs
-        if (isUuid(id)) {
-          query = query.eq("id", id);
+        if (isCustomerId(id)) {
+          query = query.eq("uuid", id);
         } else {
           query = query.eq("id", id);
         }
@@ -35,6 +35,7 @@ const CustomerDetail = () => {
         // Convert the raw data to properly typed Customer object
         const typedCustomer: Customer = {
           ...data,
+          id: data.uuid || data.id, // Use the customer ID format for display
           status: data.status as "active" | "inactive",
           cycle: data.cycle || "YYYY",
           location: data.location ? {
