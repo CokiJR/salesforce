@@ -13,26 +13,47 @@ export type Database = {
         Row: {
           amount: number
           bank_account: string | null
+          created_at: string
           customer_id: string
           due_date: string
           id: string
+          notes: string | null
           order_id: string | null
+          payment_date: string | null
+          status: string
+          sync_status: string | null
+          transaction_id: string | null
+          updated_at: string
         }
         Insert: {
           amount: number
           bank_account?: string | null
+          created_at?: string
           customer_id: string
           due_date: string
           id?: string
+          notes?: string | null
           order_id?: string | null
+          payment_date?: string | null
+          status?: string
+          sync_status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
         }
         Update: {
           amount?: number
           bank_account?: string | null
+          created_at?: string
           customer_id?: string
           due_date?: string
           id?: string
+          notes?: string | null
           order_id?: string | null
+          payment_date?: string | null
+          status?: string
+          sync_status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
