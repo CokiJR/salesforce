@@ -49,7 +49,7 @@ const Collections = () => {
     }
   };
 
-  const exportToExcel = async (collections: Collection[]) => {
+  const exportToExcel = (collections: Collection[]) => {
     try {
       CollectionService.exportToExcel(collections);
       toast({

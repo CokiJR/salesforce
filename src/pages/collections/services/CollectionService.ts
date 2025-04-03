@@ -1,7 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types";
 import { Collection, CollectionFilters } from "@/types/collection";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 
 // Helper function to transform raw Supabase data to Collection objects
@@ -121,29 +122,35 @@ export const CollectionService = {
   },
 
   exportToExcel(collections: Collection[]) {
-    const worksheet = XLSX.utils.json_to_sheet(collections.map(c => ({
-      invoice_number: c.invoice_number || '',
-      invoice_date: c.invoice_date || '',
-      customer_id: c.customer_id,
-      customer_name: c.customer_name || c.customer?.name || 'Unknown',
-      bank_account: c.bank_account || '',
-      invoice_total: c.amount,
-      payment_term: c.payment_term || '',
-      due_date: c.due_date ? new Date(c.due_date).toLocaleDateString() : '',
-      status: c.status,
-      payment_date: c.payment_date ? new Date(c.payment_date).toLocaleDateString() : '',
-      notes: c.notes || '',
-    })));
-    
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Collections');
-    
-    // Generate Excel file
-    XLSX.writeFile(workbook, 'Collections_Export.xlsx');
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(collections.map(c => ({
+        invoice_number: c.invoice_number || '',
+        invoice_date: c.invoice_date || '',
+        customer_id: c.customer_id,
+        customer_name: c.customer_name || c.customer?.name || 'Unknown',
+        bank_account: c.bank_account || '',
+        invoice_total: c.amount,
+        payment_term: c.payment_term || '',
+        due_date: c.due_date ? new Date(c.due_date).toLocaleDateString() : '',
+        status: c.status,
+        payment_date: c.payment_date ? new Date(c.payment_date).toLocaleDateString() : '',
+        notes: c.notes || '',
+      })));
+      
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Collections');
+      
+      // Generate Excel file
+      XLSX.writeFile(workbook, 'Collections_Export.xlsx');
+      return true;
+    } catch (error) {
+      console.error("Export to Excel failed:", error);
+      throw error;
+    }
   },
 
-  async importFromExcel(file: File) {
-    return new Promise<number>(async (resolve, reject) => {
+  async importFromExcel(file: File): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
       try {
         const reader = new FileReader();
         reader.onload = async (e: ProgressEvent<FileReader>) => {
@@ -158,51 +165,88 @@ export const CollectionService = {
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
             
-            console.log("Imported data:", jsonData);
+            console.log("Imported data from Excel:", jsonData);
+            
+            if (jsonData.length === 0) {
+              throw new Error("No data found in the Excel file");
+            }
             
             // Map Excel data to collection format
             const collections = jsonData.map((row: any) => {
-              const dueDate = row["due_date"] ? new Date(row["due_date"]) : new Date();
+              console.log("Processing row:", row);
+              
+              // Try to parse due date
+              let dueDate;
+              if (row["due_date"]) {
+                try {
+                  dueDate = new Date(row["due_date"]);
+                } catch (e) {
+                  console.error("Error parsing due date:", e);
+                  dueDate = new Date();
+                }
+              } else {
+                dueDate = new Date();
+              }
+              
               const today = new Date();
               
               // Determine status based on due date
               const status = dueDate < today ? 'overdue' : 'pending';
               
+              // Find correct field names
+              const customerId = row["Customers.id"] || row["customer_id"] || row["Customers id"];
+              const customerName = row["Customers.name"] || row["customer_name"] || row["Customers.name"];
+              const invoiceTotal = Number(row["invoice.total"] || row["invoice_total"] || row["invoice.total"] || 0);
+              const bankAccount = row["Bank.Account"] || row["bank_account"] || row["Bank.Account"] || '';
+              const invoiceNumber = row["Invoice.number"] || row["invoice_number"] || row["Invoice number"];
+              const invoiceDate = row["Invoice.date"] || row["invoice_date"] || row["Invoice.date"];
+              const paymentTerm = row["payment_term"] || row["payment term"] || '';
+              
               return {
-                customer_id: row["Customers.id"] || row["customer_id"],
-                customer_name: row["Customers.name"] || row["customer_name"],
-                amount: Number(row["invoice.total"]) || Number(row["amount"]),
+                customer_id: customerId,
+                customer_name: customerName,
+                amount: invoiceTotal,
                 due_date: row["due_date"] ? new Date(row["due_date"]).toISOString() : new Date().toISOString(),
                 status: row["status"] || status,
                 payment_date: row["payment_date"] ? new Date(row["payment_date"]).toISOString() : undefined,
                 notes: row["notes"] || undefined,
-                bank_account: row["Bank.Account"] || row["bank_account"] || undefined,
+                bank_account: bankAccount,
                 transaction_id: row["transaction_id"] || undefined,
                 order_id: row["order_id"] || undefined,
                 sync_status: row["sync_status"] || 'pending',
-                invoice_number: row["Invoice.number"] || row["invoice_number"],
-                invoice_date: row["Invoice.date"] ? new Date(row["Invoice.date"]).toISOString() : undefined,
-                payment_term: row["payment_term"]
+                invoice_number: invoiceNumber,
+                invoice_date: invoiceDate ? new Date(invoiceDate).toISOString() : undefined,
+                payment_term: paymentTerm
               };
             });
             
+            console.log("Collections to import:", collections);
+            
             // Import collections
-            const result = await CollectionService.importCollections(collections);
-            if (result) {
-              resolve(collections.length);
-            } else {
-              reject(new Error("Failed to import collections"));
+            const { data, error } = await supabase
+              .from('collections')
+              .insert(collections);
+            
+            if (error) {
+              console.error("Supabase insert error:", error);
+              throw error;
             }
+            
+            resolve(collections.length);
           } catch (error: any) {
-            console.error("Import error:", error);
+            console.error("Import processing error:", error);
             reject(error);
           }
         };
+        
         reader.onerror = (error) => {
+          console.error("FileReader error:", error);
           reject(error);
         };
+        
         reader.readAsArrayBuffer(file);
-      } catch (error) {
+      } catch (error: any) {
+        console.error("Import setup error:", error);
         reject(error);
       }
     });
