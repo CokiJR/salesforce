@@ -9,6 +9,7 @@ import { Collection } from "@/types/collection";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CollectionService } from "./collections/services/CollectionService";
 
 const Collections = () => {
   const { collections, isLoading, error, refetch } = useCollections();
@@ -50,8 +51,7 @@ const Collections = () => {
 
   const exportToExcel = async (collections: Collection[]) => {
     try {
-      const { exportToExcel } = await import("./collections/services/CollectionService");
-      await exportToExcel(collections);
+      CollectionService.exportToExcel(collections);
       toast({
         title: "Export Successful",
         description: `${collections.length} collections exported to Excel`,
@@ -68,8 +68,7 @@ const Collections = () => {
 
   const importFromExcel = async (file: File) => {
     try {
-      const { importFromExcel } = await import("./collections/services/CollectionService");
-      const importedCount = await importFromExcel(file);
+      const importedCount = await CollectionService.importFromExcel(file);
       toast({
         title: "Import Successful",
         description: `${importedCount} collections imported from Excel`,
