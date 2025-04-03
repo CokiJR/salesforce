@@ -27,6 +27,7 @@ export const CollectionsList = ({ collections, onSelectCollection }: Collections
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Invoice #</TableHead>
             <TableHead>Customer</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Due Date</TableHead>
@@ -36,7 +37,7 @@ export const CollectionsList = ({ collections, onSelectCollection }: Collections
         <TableBody>
           {collections.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+              <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                 No collections found
               </TableCell>
             </TableRow>
@@ -47,7 +48,10 @@ export const CollectionsList = ({ collections, onSelectCollection }: Collections
                 className="cursor-pointer hover:bg-muted/60"
                 onClick={() => onSelectCollection(collection)}
               >
-                <TableCell className="font-medium">{collection.customer_name}</TableCell>
+                <TableCell>{collection.invoice_number || 'N/A'}</TableCell>
+                <TableCell className="font-medium">
+                  {collection.customer_name || collection.customer?.name || 'Unknown'}
+                </TableCell>
                 <TableCell>${collection.amount.toFixed(2)}</TableCell>
                 <TableCell>
                   {collection.due_date ? 

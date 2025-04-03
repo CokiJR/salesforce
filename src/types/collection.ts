@@ -5,6 +5,7 @@ export interface Collection {
   id: string;
   customer_id: string;
   customer?: Customer;
+  customer_name?: string;
   amount: number;
   due_date: string;
   payment_date?: string;
@@ -17,6 +18,9 @@ export interface Collection {
   transaction?: Transaction;
   sync_status?: string;
   order_id?: string;
+  invoice_number?: string;
+  invoice_date?: string;
+  payment_term?: string;
 }
 
 export interface CollectionFilters {
