@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CollectionsList } from "./collections/components/CollectionsList";
@@ -7,45 +6,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useCollections } from "./collections/hooks/useCollections";
 import { Collection } from "@/types/collection";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { CollectionService } from "./collections/services/CollectionService";
+import { Loader2, PlusCircle } from "lucide-react";
+import { createDummyCollections } from "./collections/utils/createDummyCollections";
 
 const Collections = () => {
-  const { collections, isLoading, error, refetch } = useCollections();
+  const { collections, isLoading, error, refetch, processPayment, isProcessingPayment } = useCollections();
   const { toast } = useToast();
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [isCreatingDummy, setIsCreatingDummy] = useState(false);
 
   const handleSelectCollection = (collection: Collection) => {
     setSelectedCollection(collection);
   };
 
   const handleProcessPayment = async (collection: Collection) => {
+    processPayment(collection);
+  };
+
+  const handleCreateDummyData = async () => {
     try {
-      // Update collection status to paid
-      const { error } = await supabase
-        .from('collections')
-        .update({ 
-          status: 'paid',
-          payment_date: new Date().toISOString() 
-        })
-        .eq('id', collection.id);
-      
-      if (error) throw error;
+      setIsCreatingDummy(true);
+      await createDummyCollections();
       
       toast({
-        title: "Payment Processed",
-        description: `Payment for ${collection.customer_name || 'customer'} has been recorded.`,
+        title: "Data Dummy Dibuat",
+        description: "Data koleksi dummy berhasil dibuat untuk testing.",
       });
       
       refetch();
     } catch (error: any) {
-      console.error("Payment processing error:", error);
+      console.error("Error creating dummy data:", error);
       toast({
         variant: "destructive",
-        title: "Payment Failed",
-        description: error.message || "Failed to process payment",
+        title: "Gagal Membuat Data",
+        description: error.message || "Gagal membuat data dummy",
       });
+    } finally {
+      setIsCreatingDummy(false);
     }
   };
 
@@ -86,7 +83,22 @@ const Collections = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight">Collections</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Collections</h1>
+        <Button 
+          onClick={handleCreateDummyData} 
+          disabled={isCreatingDummy}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          {isCreatingDummy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <PlusCircle className="h-4 w-4" />
+          )}
+          Buat Data Dummy
+        </Button>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-6">
@@ -169,8 +181,16 @@ const Collections = () => {
                       <Button 
                         className="w-full bg-green-500 hover:bg-green-600"
                         onClick={() => handleProcessPayment(selectedCollection)}
+                        disabled={isProcessingPayment}
                       >
-                        Process Payment
+                        {isProcessingPayment ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          "Process Payment"
+                        )}
                       </Button>
                     </div>
                   )}

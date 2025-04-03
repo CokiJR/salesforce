@@ -2,6 +2,7 @@
 import { useCollectionQueries } from './useCollectionQueries';
 import { useCollectionMutations } from './useCollectionMutations';
 import { useCollectionSelection } from './useCollectionSelection';
+import { useCollectionPayment } from './useCollectionPayment';
 
 /**
  * Main hook that combines all collection-related functionality
@@ -10,6 +11,7 @@ export const useCollections = () => {
   const queries = useCollectionQueries();
   const mutations = useCollectionMutations();
   const selection = useCollectionSelection();
+  const payment = useCollectionPayment();
 
   return {
     // Query-related data and functions
@@ -30,6 +32,10 @@ export const useCollections = () => {
     setSelectedCollections: selection.setSelectedCollections,
     clearSelection: selection.clearSelection,
     isSelected: selection.isSelected,
-    toggleSelection: selection.toggleSelection
+    toggleSelection: selection.toggleSelection,
+    
+    // Payment-related functions
+    processPayment: payment.processPayment,
+    isProcessingPayment: payment.isProcessing
   };
 };
