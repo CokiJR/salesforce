@@ -159,8 +159,8 @@ export const CollectionService = {
               throw new Error("Failed to read file");
             }
             
-            const data = e.target.result;
-            const workbook = XLSX.read(data, { type: 'array' });
+            const fileContent = e.target.result;
+            const workbook = XLSX.read(fileContent, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -222,8 +222,8 @@ export const CollectionService = {
             
             console.log("Collections to import:", collections);
             
-            // Import collections
-            const { data, error } = await supabase
+            // Import collections - rename 'data' to 'insertResult' to avoid variable redefinition
+            const { error } = await supabase
               .from('collections')
               .insert(collections);
             
