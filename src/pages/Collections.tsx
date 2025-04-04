@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,14 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar as CalendarIcon, Download, Upload, Plus, Loader2, FileUp, FileDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { 
+  Calendar as CalendarIcon, 
+  Download, 
+  Upload, 
+  Plus, 
+  Loader2, 
+  FileUp, 
+  FileDown,
+  AlertCircle
+} from 'lucide-react';
+import { format, isAfter, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
 import { Collection } from '@/types/collection';
+import { DateRange } from 'react-day-picker';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from '@/components/ui/alert-dialog';
+import { CollectionPreviewTable } from './collections/components/CollectionPreviewTable';
+import { Alert } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 export default function Collections() {
   const navigate = useNavigate();
@@ -24,6 +39,12 @@ export default function Collections() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [openCalendar, setOpenCalendar] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [exportDateRange, setExportDateRange] = useState<DateRange>();
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [dueSoonCollections, setDueSoonCollections] = useState<Collection[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   useEffect(() => {
     fetchCollections();
@@ -31,6 +52,7 @@ export default function Collections() {
   
   useEffect(() => {
     applyFilters();
+    checkDueSoonCollections();
   }, [collections, statusFilter, dateFilter]);
   
   const fetchCollections = async () => {
@@ -53,6 +75,24 @@ export default function Collections() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const checkDueSoonCollections = () => {
+    const today = new Date();
+    const tomorrow = addDays(today, 1);
+    
+    const dueSoon = collections.filter(collection => {
+      if (collection.status === 'Paid') return false;
+      const dueDate = new Date(collection.due_date);
+      return isToday(dueDate) || isTomorrow(dueDate);
+    });
+    
+    setDueSoonCollections(dueSoon);
+    
+    // Show notification if there are collections due soon and notifications haven't been shown yet
+    if (dueSoon.length > 0 && !showNotifications) {
+      setShowNotifications(true);
     }
   };
   
@@ -111,14 +151,9 @@ export default function Collections() {
         return;
       }
       
-      await processImportData(data);
-      
-      toast({
-        title: "Import successful",
-        description: `${data.length} collections have been imported`,
-      });
-      
-      fetchCollections();
+      // Show preview instead of immediately importing
+      setPreviewData(data);
+      setShowPreview(true);
       
     } catch (error: any) {
       console.error('Import error:', error);
@@ -170,64 +205,136 @@ export default function Collections() {
     );
   };
   
-  const processImportData = async (data: any[]) => {
-    const collections = data.map(row => {
-      const getKey = (pattern: string) => {
-        const key = Object.keys(row).find(k => 
-          k.toLowerCase().includes(pattern.toLowerCase())
-        );
-        return key ? row[key] : null;
-      };
-      
-      const invoiceNumber = getKey('invoice');
-      const customerName = getKey('customer');
-      let amount = getKey('amount');
-      let dueDateValue = getKey('due');
-      
-      if (typeof amount === 'string') {
-        amount = parseFloat(amount.replace(/[^0-9.-]+/g, ''));
-      }
-      
-      let dueDate;
-      if (dueDateValue) {
-        if (typeof dueDateValue === 'string') {
-          dueDate = new Date(dueDateValue);
-        } else if (typeof dueDateValue === 'number') {
-          dueDate = new Date(Math.round((dueDateValue - 25569) * 86400 * 1000));
-        } else {
-          dueDate = new Date(dueDateValue);
-        }
-      } else {
-        dueDate = new Date();
-      }
-      
-      const defaultCustomerId = '00000000-0000-0000-0000-000000000000';
-      
-      return {
-        invoice_number: invoiceNumber || 'UNKNOWN',
-        customer_name: customerName || 'UNKNOWN',
-        amount: isNaN(amount) ? 0 : amount,
-        due_date: dueDate.toISOString(),
-        status: 'Unpaid' as const,
-        customer_id: defaultCustomerId
-      };
-    });
+  const processImportData = async () => {
+    if (!previewData.length) return;
     
-    for (const collection of collections) {
-      const { error } = await supabase
-        .from('collections')
-        .upsert([collection], { 
-          onConflict: 'invoice_number',
-          ignoreDuplicates: false
-        });
+    try {
+      setIsImporting(true);
       
-      if (error) throw error;
+      const collections = previewData.map(row => {
+        const getKey = (pattern: string) => {
+          const key = Object.keys(row).find(k => 
+            k.toLowerCase().includes(pattern.toLowerCase())
+          );
+          return key ? row[key] : null;
+        };
+        
+        const invoiceNumber = getKey('invoice');
+        const customerName = getKey('customer');
+        let amount = getKey('amount');
+        let dueDateValue = getKey('due');
+        
+        if (typeof amount === 'string') {
+          amount = parseFloat(amount.replace(/[^0-9.-]+/g, ''));
+        }
+        
+        let dueDate;
+        if (dueDateValue) {
+          if (typeof dueDateValue === 'string') {
+            dueDate = new Date(dueDateValue);
+          } else if (typeof dueDateValue === 'number') {
+            dueDate = new Date(Math.round((dueDateValue - 25569) * 86400 * 1000));
+          } else {
+            dueDate = new Date(dueDateValue);
+          }
+        } else {
+          dueDate = new Date();
+        }
+        
+        return {
+          invoice_number: invoiceNumber || 'UNKNOWN',
+          customer_name: customerName || 'UNKNOWN',
+          amount: isNaN(amount) ? 0 : amount,
+          due_date: dueDate.toISOString(),
+          status: 'Unpaid' as const
+        };
+      });
+      
+      for (const collection of collections) {
+        // Check if invoice already exists
+        const { data: existingData } = await supabase
+          .from('collections')
+          .select('id')
+          .eq('invoice_number', collection.invoice_number)
+          .maybeSingle();
+        
+        if (existingData) {
+          // Update existing record
+          const { error } = await supabase
+            .from('collections')
+            .update({
+              customer_name: collection.customer_name,
+              amount: collection.amount,
+              due_date: collection.due_date
+            })
+            .eq('id', existingData.id);
+          
+          if (error) throw error;
+        } else {
+          // Insert new record
+          const { error } = await supabase
+            .from('collections')
+            .insert([collection]);
+          
+          if (error) throw error;
+        }
+      }
+      
+      toast({
+        title: "Import successful",
+        description: `${collections.length} collections have been imported`,
+      });
+      
+      fetchCollections();
+      setShowPreview(false);
+      
+    } catch (err: any) {
+      console.error('Error processing import data:', err);
+      toast({
+        variant: "destructive",
+        title: "Import failed",
+        description: err.message,
+      });
+    } finally {
+      setIsImporting(false);
     }
   };
   
+  const cancelImport = () => {
+    setPreviewData([]);
+    setShowPreview(false);
+  };
+  
+  const openExportDialog = () => {
+    setShowExportDialog(true);
+  };
+  
   const exportToExcel = () => {
+    let dataToExport = filteredCollections;
+    
+    // Apply date range filter for export if specified
+    if (exportDateRange?.from) {
+      dataToExport = dataToExport.filter(c => {
+        const dueDate = new Date(c.due_date);
+        return isAfter(dueDate, exportDateRange.from) || 
+               (dueDate.getDate() === exportDateRange.from.getDate() && 
+                dueDate.getMonth() === exportDateRange.from.getMonth() && 
+                dueDate.getFullYear() === exportDateRange.from.getFullYear());
+      });
+    }
+    
+    if (exportDateRange?.to) {
+      dataToExport = dataToExport.filter(c => {
+        const dueDate = new Date(c.due_date);
+        return isBefore(dueDate, exportDateRange.to) || 
+               (dueDate.getDate() === exportDateRange.to.getDate() && 
+                dueDate.getMonth() === exportDateRange.to.getMonth() && 
+                dueDate.getFullYear() === exportDateRange.to.getFullYear());
+      });
+    }
+    
     const worksheet = XLSX.utils.json_to_sheet(
-      filteredCollections.map(c => ({
+      dataToExport.map(c => ({
         'Invoice Number': c.invoice_number,
         'Customer Name': c.customer_name,
         'Due Date': format(new Date(c.due_date), 'yyyy-MM-dd'),
@@ -242,6 +349,8 @@ export default function Collections() {
     
     const today = format(new Date(), 'yyyy-MM-dd');
     XLSX.writeFile(workbook, `collections-${today}.xlsx`);
+    
+    setShowExportDialog(false);
   };
   
   const handlePaymentStatusChange = async (id: string, status: 'Paid' | 'Unpaid') => {
@@ -273,6 +382,70 @@ export default function Collections() {
   
   return (
     <div className="space-y-4">
+      {/* Preview Dialog */}
+      <AlertDialog open={showPreview} onOpenChange={setShowPreview}>
+        <AlertDialogContent className="max-w-4xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Preview Import Data</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review the data before importing
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="max-h-[60vh] overflow-auto">
+            <CollectionPreviewTable data={previewData} />
+          </div>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelImport}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={processImportData}
+              disabled={isImporting}
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                'Import Data'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Export Dialog */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Export Collections</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Select Date Range (Optional)</h4>
+              <div className="border rounded-md p-4">
+                <Calendar
+                  mode="range"
+                  selected={exportDateRange}
+                  onSelect={setExportDateRange}
+                  className="rounded-md border"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={exportToExcel}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Collections</h2>
@@ -285,6 +458,26 @@ export default function Collections() {
           Add Collection
         </Button>
       </div>
+      
+      {dueSoonCollections.length > 0 && showNotifications && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <div className="flex-1">
+            <h5 className="font-medium text-amber-800">Upcoming Collections</h5>
+            <p className="text-sm text-amber-700">
+              You have {dueSoonCollections.length} collection{dueSoonCollections.length > 1 ? 's' : ''} due soon.
+            </p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowNotifications(false)} 
+            className="text-amber-800 hover:text-amber-900 hover:bg-amber-100"
+          >
+            Dismiss
+          </Button>
+        </Alert>
+      )}
       
       <Card>
         <CardHeader className="pb-3">
@@ -315,7 +508,7 @@ export default function Collections() {
                     className="w-full justify-start text-left"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFilter ? format(dateFilter, "PPP") : <span>Pick a date</span>}
+                    {dateFilter ? format(dateFilter, "PPP") : <span>Filter by date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -374,7 +567,7 @@ export default function Collections() {
               <Button 
                 variant="outline"
                 className="whitespace-nowrap"
-                onClick={exportToExcel}
+                onClick={openExportDialog}
                 disabled={filteredCollections.length === 0}
               >
                 <FileDown className="mr-2 h-4 w-4" />

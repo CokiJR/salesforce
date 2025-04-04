@@ -1,64 +1,77 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { toast } from '@/components/ui/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Save, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const AddCollection = () => {
+export default function AddCollection() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [openCalendar, setOpenCalendar] = useState(false);
-
+  const [dueDate, setDueDate] = useState<Date>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!invoiceNumber || !customerName || !amount || !dueDate) {
       toast({
         variant: "destructive",
-        title: "Missing fields",
-        description: "Please fill all required fields",
+        title: "Missing information",
+        description: "Please fill in all required fields",
       });
       return;
     }
     
     try {
-      setSaving(true);
+      setIsSubmitting(true);
       
-      // Generate default customer_id for required field
-      const defaultCustomerId = '00000000-0000-0000-0000-000000000000';
+      const newCollection = {
+        invoice_number: invoiceNumber,
+        customer_name: customerName,
+        amount: parseFloat(amount),
+        due_date: dueDate.toISOString(),
+        status: 'Unpaid' as const,
+      };
       
-      const { data, error } = await supabase
+      // Check for duplicate invoice number
+      const { data: existingCollection } = await supabase
         .from('collections')
-        .insert({
-          invoice_number: invoiceNumber,
-          customer_name: customerName,
-          amount: parseFloat(amount),
-          due_date: dueDate.toISOString(),
-          status: 'Unpaid',
-          customer_id: defaultCustomerId // Add required customer_id field
-        })
-        .select();
+        .select('id')
+        .eq('invoice_number', invoiceNumber)
+        .maybeSingle();
+        
+      if (existingCollection) {
+        toast({
+          variant: "destructive",
+          title: "Duplicate invoice",
+          description: "An invoice with this number already exists",
+        });
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('collections')
+        .insert([newCollection]);
       
       if (error) throw error;
       
       toast({
         title: "Collection added",
-        description: "A new collection has been successfully added",
+        description: "The collection has been successfully added",
       });
       
       navigate('/dashboard/collections');
+      
     } catch (error: any) {
       console.error('Error adding collection:', error);
       toast({
@@ -67,59 +80,71 @@ const AddCollection = () => {
         description: `Failed to add collection: ${error.message}`,
       });
     } finally {
-      setSaving(false);
+      setIsSubmitting(false);
     }
   };
   
   return (
-    <div className="animate-fade-in">
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Add Collection</h2>
+        <p className="text-muted-foreground">
+          Add a new invoice for collection
+        </p>
+      </div>
+      
       <Card>
         <CardHeader>
-          <CardTitle>Add Collection</CardTitle>
-          <CardDescription>Create a new collection for payment tracking</CardDescription>
+          <CardTitle>Collection Details</CardTitle>
+          <CardDescription>
+            Enter the details for the new collection
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="invoiceNumber">Invoice Number*</Label>
-                <Input 
-                  id="invoiceNumber" 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="invoice-number">Invoice Number *</Label>
+                <Input
+                  id="invoice-number"
+                  placeholder="Enter invoice number"
                   value={invoiceNumber}
-                  onChange={e => setInvoiceNumber(e.target.value)}
-                  placeholder="e.g. INV-2023-001" 
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="customerName">Customer Name*</Label>
-                <Input 
-                  id="customerName" 
+              <div className="space-y-2">
+                <Label htmlFor="customer-name">Customer Name *</Label>
+                <Input
+                  id="customer-name"
+                  placeholder="Enter customer name"
                   value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="Customer name" 
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="amount">Amount*</Label>
-                <Input 
-                  id="amount" 
+            
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount *</Label>
+                <Input
+                  id="amount"
                   type="number"
                   step="0.01"
+                  placeholder="0.00"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  placeholder="0.00" 
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="dueDate">Due Date*</Label>
-                <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
+              <div className="space-y-2">
+                <Label>Due Date *</Label>
+                <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal"
+                      className={`w-full justify-start text-left ${!dueDate ? 'text-muted-foreground' : ''}`}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
@@ -129,10 +154,7 @@ const AddCollection = () => {
                     <Calendar
                       mode="single"
                       selected={dueDate}
-                      onSelect={(date) => {
-                        setDueDate(date);
-                        setOpenCalendar(false);
-                      }}
+                      onSelect={setDueDate}
                       initialFocus
                     />
                   </PopoverContent>
@@ -140,35 +162,23 @@ const AddCollection = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="justify-between">
-            <Button
-              type="button"
-              variant="outline"
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              type="button" 
               onClick={() => navigate('/dashboard/collections')}
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={saving}
+              disabled={isSubmitting}
             >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Collection
-                </>
-              )}
+              {isSubmitting ? 'Saving...' : 'Save Collection'}
             </Button>
           </CardFooter>
         </form>
       </Card>
     </div>
   );
-};
-
-export default AddCollection;
+}
