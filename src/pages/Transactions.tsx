@@ -10,7 +10,7 @@ import { TransactionFilters } from "./transactions/components/TransactionFilters
 import { EmptyTransactions } from "./transactions/components/EmptyTransactions";
 
 const Transactions = () => {
-  const { transactions, loading } = useTransactions();
+  const { transactions, isLoading, error } = useTransactions();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [syncFilter, setSyncFilter] = useState<string>("all");
@@ -53,7 +53,7 @@ const Transactions = () => {
         setSyncFilter={setSyncFilter}
       />
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>

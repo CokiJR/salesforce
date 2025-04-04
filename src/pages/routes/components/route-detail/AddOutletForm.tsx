@@ -4,15 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Search } from 'lucide-react';
-import { Customer } from '@/types';
+import { Customer, RouteStop } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface AddOutletFormProps {
-  onAdd: (customerId: string) => void;
-  onCancel: () => void;
+  routeId: string;
+  routeDate: string;
+  existingStops: RouteStop[];
+  onAdd?: (customerId: string) => void;
+  onCancel?: () => void;
 }
 
-export function AddOutletForm({ onAdd, onCancel }: AddOutletFormProps) {
+export function AddOutletForm({ routeId, routeDate, existingStops, onAdd, onCancel }: AddOutletFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
@@ -79,9 +83,54 @@ export function AddOutletForm({ onAdd, onCancel }: AddOutletFormProps) {
     setSearchTerm(e.target.value);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (selectedCustomer) {
-      onAdd(selectedCustomer);
+      try {
+        // Check if the customer is already in existingStops
+        if (existingStops.some(stop => stop.customer_id === selectedCustomer)) {
+          toast({
+            variant: "destructive",
+            title: "Customer already in route",
+            description: "This customer is already added to the route.",
+          });
+          return;
+        }
+
+        // Get the selected customer data
+        const customer = customers.find(c => c.id === selectedCustomer);
+        if (!customer) return;
+
+        // Create a new route stop in the database
+        const { error } = await supabase
+          .from('route_stops')
+          .insert({
+            route_id: routeId,
+            customer_id: selectedCustomer,
+            visit_date: routeDate,
+            visit_time: new Date().toISOString().split('T')[1].substring(0, 8),
+            status: 'pending',
+            notes: '',
+            coverage_status: 'Cover Location',
+            barcode_scanned: false,
+            visited: false
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Stop added",
+          description: `${customer.name} has been added to the route.`,
+        });
+
+        if (onAdd) onAdd(selectedCustomer);
+      } catch (error: any) {
+        console.error('Error adding stop:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to add stop: ${error.message}`,
+        });
+      }
     }
   };
 

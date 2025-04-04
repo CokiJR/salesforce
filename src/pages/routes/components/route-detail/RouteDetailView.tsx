@@ -31,6 +31,12 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
     setShowBarcodeScanner(true);
   };
 
+  // Handle adding a new outlet to the route
+  const handleAddOutlet = (customerId: string) => {
+    // Reload the route data to show the new stop
+    window.location.reload();
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -79,6 +85,8 @@ export function RouteDetailView({ route, isLoading }: RouteDetailViewProps) {
           routeId={route.id} 
           routeDate={route.date}
           existingStops={route.stops}
+          onAdd={handleAddOutlet}
+          onCancel={toggleAddOutlet}
         />
       )}
 
