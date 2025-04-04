@@ -1,61 +1,72 @@
 
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Transaction } from "@/types";
+import { useState, useEffect } from 'react';
+import { Transaction } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useTransactions = () => {
+export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTransactions();
   }, []);
 
   const fetchTransactions = async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
       const { data, error } = await supabase
-        .from("transactions")
+        .from('transactions')
         .select(`
           *,
-          customer:customers(name),
-          order:orders(id)
+          order:orders(id, total_amount),
+          customer:customers(id, name)
         `)
-        .order("transaction_date", { ascending: false });
+        .order('transaction_date', { ascending: false });
 
       if (error) throw error;
-      
-      // Transform the data to match our Transaction interface
-      const formattedData: Transaction[] = data?.map(item => ({
-        ...item,
-        customer_name: item.customer?.name || "Unknown Customer",
-        order_id: item.order?.id || null,
-        // Ensure these fields are included to match the Transaction interface
-        id: item.id,
-        customer_id: item.customer_id,
-        amount: item.amount,
-        transaction_id: item.transaction_id,
-        status: item.status,
-        sync_status: item.sync_status,
-        payment_method: item.payment_method as "cash" | "credit_card" | "bank_transfer",
-        transaction_date: item.transaction_date,
-        created_at: item.created_at
-      })) || [];
-      
-      setTransactions(formattedData);
-    } catch (error: any) {
-      console.error("Error fetching transactions:", error.message);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to load transactions: ${error.message}`,
-      });
+
+      // Add customer_name when available from joined table
+      const formattedTransactions = data.map((transaction: any) => ({
+        ...transaction,
+        customer_name: transaction.customer ? transaction.customer.name : 'Unknown Customer'
+      }));
+
+      setTransactions(formattedTransactions as Transaction[]);
+    } catch (err: any) {
+      console.error('Error fetching transactions:', err);
+      setError(err.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  return { transactions, loading, fetchTransactions };
-};
+  const createTransaction = async (transaction: Omit<Transaction, 'id' | 'created_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(transaction)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTransactions(prev => [data as Transaction, ...prev]);
+      return data as Transaction;
+    } catch (err: any) {
+      console.error('Error creating transaction:', err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  return {
+    transactions,
+    isLoading,
+    error,
+    fetchTransactions,
+    createTransaction
+  };
+}

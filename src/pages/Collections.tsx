@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,16 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
-
-interface Collection {
-  id: string;
-  invoice_number: string;
-  customer_name: string;
-  due_date: string;
-  amount: number;
-  status: 'Paid' | 'Unpaid';
-  created_at: string;
-}
+import { Collection } from '@/types/collection';
 
 export default function Collections() {
   const navigate = useNavigate();
@@ -53,7 +43,7 @@ export default function Collections() {
       
       if (error) throw error;
       
-      setCollections(data || []);
+      setCollections(data as Collection[]);
     } catch (err: any) {
       console.error('Error fetching collections:', err);
       toast({
@@ -69,14 +59,12 @@ export default function Collections() {
   const applyFilters = () => {
     let filtered = [...collections];
     
-    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(collection => 
         collection.status === statusFilter
       );
     }
     
-    // Apply date filter
     if (dateFilter) {
       const filterDate = new Date(dateFilter);
       filterDate.setHours(0, 0, 0, 0);
@@ -99,7 +87,6 @@ export default function Collections() {
     const file = event.target.files?.[0];
     if (!file) return;
     
-    // Validate file type
     const fileExt = file.name.split('.').pop()?.toLowerCase();
     if (fileExt !== 'xlsx' && fileExt !== 'xls' && fileExt !== 'csv') {
       toast({
@@ -113,10 +100,8 @@ export default function Collections() {
     try {
       setIsImporting(true);
       
-      // Read the file
       const data = await readExcelFile(file);
       
-      // Validate data structure
       if (!validateImportData(data)) {
         toast({
           variant: "destructive",
@@ -126,7 +111,6 @@ export default function Collections() {
         return;
       }
       
-      // Process and save data
       await processImportData(data);
       
       toast({
@@ -134,7 +118,6 @@ export default function Collections() {
         description: `${data.length} collections have been imported`,
       });
       
-      // Refresh the collections list
       fetchCollections();
       
     } catch (error: any) {
@@ -146,7 +129,7 @@ export default function Collections() {
       });
     } finally {
       setIsImporting(false);
-      event.target.value = ''; // Reset the input
+      event.target.value = '';
     }
   };
   
@@ -159,11 +142,9 @@ export default function Collections() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
           
-          // Get first sheet
           const firstSheet = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheet];
           
-          // Convert to JSON
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           resolve(jsonData);
         } catch (error) {
@@ -179,7 +160,6 @@ export default function Collections() {
   const validateImportData = (data: any[]): boolean => {
     if (data.length === 0) return false;
     
-    // Check if required columns exist
     const requiredColumns = ['invoice_number', 'customer_name', 'due_date', 'amount'];
     const firstRow = data[0];
     
@@ -192,7 +172,6 @@ export default function Collections() {
   
   const processImportData = async (data: any[]) => {
     const collections = data.map(row => {
-      // Find the appropriate keys in the data
       const getKey = (pattern: string) => {
         const key = Object.keys(row).find(k => 
           k.toLowerCase().includes(pattern.toLowerCase())
@@ -200,24 +179,20 @@ export default function Collections() {
         return key ? row[key] : null;
       };
       
-      // Extract values
       const invoiceNumber = getKey('invoice');
       const customerName = getKey('customer');
       let amount = getKey('amount');
       let dueDateValue = getKey('due');
       
-      // Parse amount to number
       if (typeof amount === 'string') {
         amount = parseFloat(amount.replace(/[^0-9.-]+/g, ''));
       }
       
-      // Parse date
       let dueDate;
       if (dueDateValue) {
         if (typeof dueDateValue === 'string') {
           dueDate = new Date(dueDateValue);
         } else if (typeof dueDateValue === 'number') {
-          // Handle Excel date (number of days since Jan 1, 1900)
           dueDate = new Date(Math.round((dueDateValue - 25569) * 86400 * 1000));
         } else {
           dueDate = new Date(dueDateValue);
@@ -226,33 +201,31 @@ export default function Collections() {
         dueDate = new Date();
       }
       
+      const defaultCustomerId = '00000000-0000-0000-0000-000000000000';
+      
       return {
         invoice_number: invoiceNumber || 'UNKNOWN',
         customer_name: customerName || 'UNKNOWN',
         amount: isNaN(amount) ? 0 : amount,
         due_date: dueDate.toISOString(),
-        status: 'Unpaid'
+        status: 'Unpaid' as const,
+        customer_id: defaultCustomerId
       };
     });
     
-    // Upsert data (update existing or insert new)
     for (const collection of collections) {
       const { error } = await supabase
         .from('collections')
-        .upsert(
-          [collection],
-          { 
-            onConflict: 'invoice_number',
-            ignoreDuplicates: false
-          }
-        );
+        .upsert([collection], { 
+          onConflict: 'invoice_number',
+          ignoreDuplicates: false
+        });
       
       if (error) throw error;
     }
   };
   
   const exportToExcel = () => {
-    // Create worksheet from filtered collections
     const worksheet = XLSX.utils.json_to_sheet(
       filteredCollections.map(c => ({
         'Invoice Number': c.invoice_number,
@@ -264,11 +237,9 @@ export default function Collections() {
       }))
     );
     
-    // Create workbook and add worksheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Collections');
     
-    // Generate Excel file
     const today = format(new Date(), 'yyyy-MM-dd');
     XLSX.writeFile(workbook, `collections-${today}.xlsx`);
   };
@@ -282,7 +253,6 @@ export default function Collections() {
       
       if (error) throw error;
       
-      // Update local state
       setCollections(prev => 
         prev.map(c => c.id === id ? { ...c, status } : c)
       );

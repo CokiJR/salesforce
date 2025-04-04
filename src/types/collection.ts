@@ -1,3 +1,4 @@
+
 import { Customer, Transaction } from '.';
 
 export interface Collection {
@@ -7,7 +8,7 @@ export interface Collection {
   amount: number;
   due_date: string;
   payment_date?: string;
-  status: 'pending' | 'overdue' | 'paid' | 'canceled';
+  status: 'Paid' | 'Unpaid' | 'pending' | 'overdue' | 'paid' | 'canceled';
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -15,6 +16,9 @@ export interface Collection {
   transaction_id?: string;
   transaction?: Transaction;
   sync_status?: string;
+  invoice_number?: string;
+  customer_name?: string;
+  invoice_date?: string;
 }
 
 export interface CollectionFilters {

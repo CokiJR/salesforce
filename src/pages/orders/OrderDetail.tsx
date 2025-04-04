@@ -42,7 +42,25 @@ const OrderDetail = () => {
         if (itemsError) throw itemsError;
         
         // Map and prepare the order data
-        const customer = orderData.customer as Customer;
+        const customerData = orderData.customer as any;
+        const customer: Customer = {
+          id: customerData.id,
+          name: customerData.name,
+          address: customerData.address,
+          city: customerData.city,
+          phone: customerData.phone,
+          email: customerData.email || '',
+          contact_person: customerData.contact_person,
+          status: customerData.status as "active" | "inactive",
+          cycle: customerData.cycle || "YYYY",
+          created_at: customerData.created_at,
+          location: customerData.location ? {
+            lat: Number((customerData.location as any).lat || 0),
+            lng: Number((customerData.location as any).lng || 0)
+          } : undefined,
+          bank_account: customerData.bank_account
+        };
+        
         const items = itemsData.map((item: any) => ({
           ...item,
           product: item.product as Product
@@ -53,15 +71,7 @@ const OrderDetail = () => {
           ...orderData,
           status: orderData.status as "draft" | "pending" | "confirmed" | "delivered" | "canceled",
           payment_status: orderData.payment_status as "unpaid" | "partial" | "paid",
-          customer: {
-            ...customer,
-            cycle: customer.cycle || "YYYY",
-            status: customer.status as "active" | "inactive",
-            location: customer.location ? {
-              lat: Number((customer.location as any).lat || 0),
-              lng: Number((customer.location as any).lng || 0)
-            } : undefined
-          },
+          customer,
           items,
           notes: orderData.notes || ""
         };

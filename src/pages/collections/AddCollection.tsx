@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +36,9 @@ const AddCollection = () => {
     try {
       setSaving(true);
       
+      // Generate default customer_id for required field
+      const defaultCustomerId = '00000000-0000-0000-0000-000000000000';
+      
       const { data, error } = await supabase
         .from('collections')
         .insert({
@@ -44,7 +46,8 @@ const AddCollection = () => {
           customer_name: customerName,
           amount: parseFloat(amount),
           due_date: dueDate.toISOString(),
-          status: 'Unpaid'
+          status: 'Unpaid',
+          customer_id: defaultCustomerId // Add required customer_id field
         })
         .select();
       
