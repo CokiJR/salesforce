@@ -39,4 +39,5 @@ export interface CollectionImportFormat {
   notes?: string;
   bank_account?: string;
   invoice_date?: string;
+  customer_id?: string; // Added customer_id as optional for imports
 }

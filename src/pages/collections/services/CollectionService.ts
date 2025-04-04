@@ -50,7 +50,7 @@ export class CollectionService {
             const collection = {
               invoice_number: row.invoice_number || row.Invoice_Number || row['Invoice Number'] || '',
               customer_name: row.customer_name || row.Customer_Name || row['Customer Name'] || 'Unknown',
-              customer_id: '00000000-0000-0000-0000-000000000000', // Default customer ID
+              customer_id: row.customer_id || '00000000-0000-0000-0000-000000000000', // Default customer ID if not provided
               amount: Number(row.amount || row.Amount || 0),
               due_date: row.due_date || row.Due_Date || row['Due Date'] 
                 ? new Date(row.due_date || row.Due_Date || row['Due Date']).toISOString() 
@@ -420,6 +420,7 @@ export class CollectionService {
       {
         'Invoice Number': '',
         'Customer Name': '',
+        'Customer ID': '00000000-0000-0000-0000-000000000000', // Added a default customer ID field
         'Amount': '',
         'Due Date': 'YYYY-MM-DD',
         'Invoice Date': 'YYYY-MM-DD',

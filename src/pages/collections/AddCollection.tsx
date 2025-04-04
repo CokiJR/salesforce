@@ -46,11 +46,16 @@ export default function AddCollection() {
       };
       
       // Check for duplicate invoice number
-      const { data: existingCollection } = await supabase
+      const { data: existingCollection, error: checkError } = await supabase
         .from('collections')
         .select('id')
         .eq('invoice_number', invoiceNumber)
         .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking for duplicate invoice:', checkError);
+        throw checkError;
+      }
         
       if (existingCollection) {
         toast({
@@ -58,15 +63,16 @@ export default function AddCollection() {
           title: "Duplicate invoice",
           description: "An invoice with this number already exists",
         });
+        setIsSubmitting(false);
         return;
       }
       
-      // Fix: directly insert the object (not as an array)
-      const { error } = await supabase
+      // Insert the new collection - fixed to pass the object directly
+      const { error: insertError } = await supabase
         .from('collections')
         .insert(newCollection);
       
-      if (error) throw error;
+      if (insertError) throw insertError;
       
       toast({
         title: "Collection added",
