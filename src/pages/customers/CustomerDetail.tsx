@@ -3,9 +3,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Customer } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { CustomerDetailView } from "./components/CustomerDetailView";
-import { isCustomerId } from "./utils/customerIdUtils";
 
 const CustomerDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,33 +17,23 @@ const CustomerDetail = () => {
       
       try {
         setLoading(true);
-        
-        let query = supabase.from("customers").select("*");
-        
-        // Handle both UUID and formatted customer IDs
-        if (isCustomerId(id)) {
-          query = query.eq("uuid", id);
-        } else {
-          query = query.eq("id", id);
-        }
-        
-        const { data, error } = await query.single();
+        const { data, error } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", id)
+          .single();
         
         if (error) throw error;
         
         // Convert the raw data to properly typed Customer object
         const typedCustomer: Customer = {
           ...data,
-          id: data.uuid || data.id, // Use the customer ID format for display
           status: data.status as "active" | "inactive",
           cycle: data.cycle || "YYYY",
           location: data.location ? {
             lat: Number((data.location as any).lat || 0),
             lng: Number((data.location as any).lng || 0)
-          } : undefined,
-          payment_term: data.payment_term || undefined,
-          payment_term_description: data.payment_term_description || undefined,
-          bank_account: data.bank_account || undefined
+          } : undefined
         };
         
         setCustomer(typedCustomer);

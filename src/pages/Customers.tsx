@@ -16,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Plus, Search, UserPlus } from "lucide-react";
-import { getPaymentTermDescription } from "./customers/utils/paymentTerms";
 
 const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -44,17 +43,12 @@ const Customers = () => {
       const typedCustomers: Customer[] = data?.map(customer => ({
         ...customer,
         status: customer.status as "active" | "inactive",
-        cycle: customer.cycle || "YYYY",
-        // Use uuid field as display ID if available, otherwise use database id
-        id: customer.uuid || customer.id,
+        cycle: customer.cycle || "YYYY", // Add cycle field with default
         // Convert JSON location to the expected format if it exists
         location: customer.location ? {
           lat: Number((customer.location as any).lat || 0),
           lng: Number((customer.location as any).lng || 0)
-        } : undefined,
-        payment_term: customer.payment_term || undefined,
-        payment_term_description: customer.payment_term_description || undefined,
-        bank_account: customer.bank_account || undefined
+        } : undefined
       })) || [];
       
       setCustomers(typedCustomers);
@@ -82,8 +76,7 @@ const Customers = () => {
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.contact_person.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (customer.id && customer.id.toLowerCase().includes(searchQuery.toLowerCase()))
+    customer.contact_person.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Function to get cycle description
@@ -129,7 +122,6 @@ const Customers = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Contact Person</TableHead>
                 <TableHead>City</TableHead>
@@ -144,8 +136,7 @@ const Customers = () => {
                   className="cursor-pointer hover:bg-muted/60"
                   onClick={() => handleCustomerDetails(customer.id)}
                 >
-                  <TableCell className="font-medium">{customer.id}</TableCell>
-                  <TableCell>{customer.name}</TableCell>
+                  <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.contact_person}</TableCell>
                   <TableCell>{customer.city}</TableCell>
                   <TableCell>

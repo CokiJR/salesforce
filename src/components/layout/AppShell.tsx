@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link, Outlet } from "react-router-dom";
 import {
@@ -28,7 +27,6 @@ import {
   Upload,
   Download,
   CreditCard,
-  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -161,14 +159,6 @@ function AppSidebar({ onSignOut, onSync, syncStatus, user }: AppSidebarProps) {
                   <Link to="/dashboard/orders" className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />
                     <span>Orders</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/collections" className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    <span>Collections</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

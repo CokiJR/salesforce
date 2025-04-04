@@ -18,12 +18,9 @@ export interface Customer {
   status: "active" | "inactive";
   cycle: string; // Added cycle field for visit scheduling
   created_at: string;
-  payment_term?: string; // Payment term code (Z000, Z007, etc.)
-  payment_term_description?: string; // Payment term description
-  bank_account?: string; // Bank account for payment validation
-  uuid?: string; // UUID field from database
-  location?: { lat: number; lng: number; };
+  location?: { lat: number; lng: number };
   due_date?: string; // Date when payment is due
+  bank_account?: string; // Bank account for payment validation
 }
 
 export interface Product {

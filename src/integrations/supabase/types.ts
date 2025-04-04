@@ -11,49 +11,46 @@ export type Database = {
     Tables: {
       collections: {
         Row: {
-          amount: number
-          bank_account: string | null
-          created_at: string
-          customer_id: string
-          due_date: string
           id: string
-          notes: string | null
-          order_id: string | null
+          customer_id: string
+          amount: number
+          due_date: string
           payment_date: string | null
           status: string
-          sync_status: string | null
-          transaction_id: string | null
+          notes: string | null
+          created_at: string
           updated_at: string
+          bank_account: string | null
+          transaction_id: string | null
+          sync_status: string | null
         }
         Insert: {
-          amount: number
-          bank_account?: string | null
-          created_at?: string
-          customer_id: string
-          due_date: string
           id?: string
-          notes?: string | null
-          order_id?: string | null
+          customer_id: string
+          amount: number
+          due_date: string
           payment_date?: string | null
           status?: string
-          sync_status?: string | null
-          transaction_id?: string | null
+          notes?: string | null
+          created_at?: string
           updated_at?: string
+          bank_account?: string | null
+          transaction_id?: string | null
+          sync_status?: string | null
         }
         Update: {
-          amount?: number
-          bank_account?: string | null
-          created_at?: string
-          customer_id?: string
-          due_date?: string
           id?: string
-          notes?: string | null
-          order_id?: string | null
+          customer_id?: string
+          amount?: number
+          due_date?: string
           payment_date?: string | null
           status?: string
-          sync_status?: string | null
-          transaction_id?: string | null
+          notes?: string | null
+          created_at?: string
           updated_at?: string
+          bank_account?: string | null
+          transaction_id?: string | null
+          sync_status?: string | null
         }
         Relationships: [
           {
@@ -64,18 +61,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "collections_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "collections_transaction_id_fkey"
+            columns: ["transaction_id"]
             isOneToOne: false
-            referencedRelation: "orders"
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
         ]
-      }
+      },
       customers: {
         Row: {
           address: string
-          bank_account: string | null
           city: string
           contact_person: string
           created_at: string
@@ -84,15 +80,11 @@ export type Database = {
           id: string
           location: Json | null
           name: string
-          payment_term: string | null
-          payment_term_description: string | null
           phone: string
           status: string
-          uuid: string | null
         }
         Insert: {
           address: string
-          bank_account?: string | null
           city: string
           contact_person: string
           created_at?: string
@@ -101,15 +93,11 @@ export type Database = {
           id?: string
           location?: Json | null
           name: string
-          payment_term?: string | null
-          payment_term_description?: string | null
           phone: string
           status: string
-          uuid?: string | null
         }
         Update: {
           address?: string
-          bank_account?: string | null
           city?: string
           contact_person?: string
           created_at?: string
@@ -118,11 +106,8 @@ export type Database = {
           id?: string
           location?: Json | null
           name?: string
-          payment_term?: string | null
-          payment_term_description?: string | null
           phone?: string
           status?: string
-          uuid?: string | null
         }
         Relationships: []
       }
@@ -421,13 +406,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      update_customer_id: {
-        Args: {
-          old_id: string
-          new_id: string
-        }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

@@ -1,41 +1,126 @@
+import { useState, useEffect } from 'react';
+import { Collection } from '@/types/collection';
+import { Customer } from '@/types';
+import { CollectionService } from '../services/CollectionService';
 
-import { useCollectionQueries } from './useCollectionQueries';
-import { useCollectionMutations } from './useCollectionMutations';
-import { useCollectionSelection } from './useCollectionSelection';
-import { useCollectionPayment } from './useCollectionPayment';
+export function useCollections() {
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-/**
- * Main hook that combines all collection-related functionality
- */
-export const useCollections = () => {
-  const queries = useCollectionQueries();
-  const mutations = useCollectionMutations();
-  const selection = useCollectionSelection();
-  const payment = useCollectionPayment();
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
+  const fetchCollections = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const collectionsData = await CollectionService.getCollections();
+      setCollections(collectionsData);
+      
+      // Get customers with due payments
+      const customersData = await CollectionService.getCustomersWithDuePayments();
+      setCustomers(customersData);
+    } catch (err: any) {
+      console.error('Error in useCollections:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createCollection = async (collection: Omit<Collection, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newCollection = await CollectionService.createCollection(collection);
+      setCollections(prev => [...prev, newCollection]);
+      return newCollection;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const updateCollection = async (id: string, updates: Partial<Collection>) => {
+    try {
+      const updatedCollection = await CollectionService.updateCollection(id, updates);
+      setCollections(prev => 
+        prev.map(collection => 
+          collection.id === id ? updatedCollection : collection
+        )
+      );
+      return updatedCollection;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const deleteCollection = async (id: string) => {
+    try {
+      await CollectionService.deleteCollection(id);
+      setCollections(prev => prev.filter(collection => collection.id !== id));
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const markAsPaid = async (id: string, transactionId?: string) => {
+    try {
+      const updatedCollection = await CollectionService.markAsPaid(id, transactionId);
+      setCollections(prev => 
+        prev.map(collection => 
+          collection.id === id ? updatedCollection : collection
+        )
+      );
+      return updatedCollection;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const importFromExcel = async (file: File) => {
+    try {
+      const importedCollections = await CollectionService.importFromExcel(file);
+      setCollections(prev => [...prev, ...importedCollections]);
+      return importedCollections;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      const blob = CollectionService.exportToExcel(collections);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `collections_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
   return {
-    // Query-related data and functions
-    collections: queries.collections,
-    overdueCollections: queries.overdueCollections,
-    isLoading: queries.isLoading,
-    isError: queries.isError,
-    error: queries.error,
-    refetch: queries.refetch,
-    
-    // Mutation-related functions
-    updateCollection: mutations.updateCollection,
-    markAsPaid: mutations.markAsPaid,
-    importCollections: mutations.importCollections,
-    
-    // Selection-related state and functions
-    selectedCollections: selection.selectedCollections,
-    setSelectedCollections: selection.setSelectedCollections,
-    clearSelection: selection.clearSelection,
-    isSelected: selection.isSelected,
-    toggleSelection: selection.toggleSelection,
-    
-    // Payment-related functions
-    processPayment: payment.processPayment,
-    isProcessingPayment: payment.isProcessing
+    collections,
+    customers,
+    isLoading,
+    error,
+    refresh: fetchCollections,
+    createCollection,
+    updateCollection,
+    deleteCollection,
+    markAsPaid,
+    importFromExcel,
+    exportToExcel
   };
-};
+}

@@ -13,7 +13,6 @@ import Products from "@/pages/Products";
 import Orders from "@/pages/Orders";
 import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
 import Transactions from "@/pages/Transactions";
-import Collections from "@/pages/Collections"; // Added Collections import
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
 
@@ -69,8 +68,6 @@ const App = () => (
               <Route path="transactions" element={<Transactions />} />
               <Route path="transactions/:id" element={<div className="p-4 animate-fade-in">Transaction details coming soon</div>} />
               <Route path="transactions/add" element={<AddTransaction />} />
-              
-              <Route path="collections" element={<Collections />} />
               
               <Route path="admin" element={<div className="p-4 animate-fade-in">Admin page coming soon</div>} />
             </Route>

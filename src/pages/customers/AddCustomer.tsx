@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { User, Mail, Building, Phone, MapPin, UserPlus, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { generateNextCustomerId } from "./utils/customerIdUtils";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -19,10 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Mail, Building, Phone, MapPin, UserPlus, Calendar, CreditCard, BadgeDollarSign } from "lucide-react";
-import { paymentTerms } from "./utils/paymentTerms";
-import { bankAccounts } from "./utils/bankAccounts";
 
+// Define the validation schema
 const customerSchema = z.object({
   name: z.string().min(2, { message: "Customer name must be at least 2 characters" }),
   contact_person: z.string().min(2, { message: "Contact person name is required" }),
@@ -34,46 +34,18 @@ const customerSchema = z.object({
   cycle: z.enum(["YYYY", "YTYT", "TYTY"], { 
     message: "Please select a valid visit cycle" 
   }),
-  payment_term: z.string().optional(),
-  bank_account: z.string().optional(),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
 
 export default function AddCustomer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [nextCustomerId, setNextCustomerId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchLastCustomerId = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("customers")
-          .select("uuid")
-          .not('uuid', 'is', null)
-          .order("uuid", { ascending: false })
-          .limit(1);
-        
-        if (error) throw error;
-        
-        const lastId = data && data.length > 0 ? data[0].uuid : null;
-        const nextId = generateNextCustomerId(lastId);
-        setNextCustomerId(nextId);
-      } catch (error: any) {
-        console.error("Error fetching last customer ID:", error.message);
-        setNextCustomerId("C1010001");
-      }
-    };
-    
-    fetchLastCustomerId();
-  }, []);
 
   const defaultValues: Partial<CustomerFormValues> = {
     status: "active",
     cycle: "YYYY",
-    payment_term: "Z000",
   };
 
   const form = useForm<CustomerFormValues>({
@@ -85,10 +57,9 @@ export default function AddCustomer() {
     try {
       setIsSubmitting(true);
       
-      const paymentTermObj = paymentTerms.find(term => term.code === data.payment_term);
-      
+      // Create a customerData object with the shape expected by Supabase
+      // Important: data is already validated by Zod so all required fields are present
       const customerData = {
-        uuid: nextCustomerId,
         name: data.name,
         contact_person: data.contact_person,
         email: data.email,
@@ -97,12 +68,10 @@ export default function AddCustomer() {
         city: data.city,
         status: data.status,
         cycle: data.cycle,
-        payment_term: data.payment_term,
-        payment_term_description: paymentTermObj?.description || null,
-        bank_account: data.bank_account,
         created_at: new Date().toISOString(),
       };
       
+      // Now the customerData has all required fields explicitly defined
       const { data: newCustomer, error } = await supabase
         .from("customers")
         .insert(customerData)
@@ -113,9 +82,10 @@ export default function AddCustomer() {
       
       toast({
         title: "Customer added successfully",
-        description: `${data.name} has been added with ID ${nextCustomerId}.`,
+        description: `${data.name} has been added to your customers.`,
       });
       
+      // Navigate back to customers list
       navigate("/dashboard/customers");
       
     } catch (error: any) {
@@ -141,7 +111,6 @@ export default function AddCustomer() {
           <CardTitle className="text-2xl">Add New Customer</CardTitle>
           <CardDescription>
             Enter the customer's information below to add them to your system.
-            <div className="mt-1 text-sm font-medium text-blue-600">Customer ID: {nextCustomerId}</div>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -311,70 +280,6 @@ export default function AddCustomer() {
                         </Select>
                         <FormDescription>
                           Determines when this customer will be automatically scheduled for visits.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="payment_term"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Term</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value || "Z000"}>
-                          <FormControl>
-                            <div className="relative">
-                              <SelectTrigger className="pl-10">
-                                <SelectValue placeholder="Select payment term" />
-                              </SelectTrigger>
-                              <BadgeDollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            </div>
-                          </FormControl>
-                          <SelectContent>
-                            {paymentTerms.map((term) => (
-                              <SelectItem key={term.code} value={term.code}>
-                                {term.code} - {term.description}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Defines when payments are due for this customer.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="bank_account"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bank Account</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <div className="relative">
-                              <SelectTrigger className="pl-10">
-                                <SelectValue placeholder="Select bank account" />
-                              </SelectTrigger>
-                              <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            </div>
-                          </FormControl>
-                          <SelectContent>
-                            {bankAccounts.map((account) => (
-                              <SelectItem key={account.accountNumber} value={account.fullDisplay}>
-                                {account.fullDisplay}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Bank account for payments from this customer.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

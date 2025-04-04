@@ -1,207 +1,36 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { CollectionsList } from "./collections/components/CollectionsList";
-import CollectionImportExport from "./collections/components/CollectionImportExport";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCollections } from "./collections/hooks/useCollections";
-import { Collection } from "@/types/collection";
-import { Button } from "@/components/ui/button";
-import { Loader2, PlusCircle } from "lucide-react";
-import { createDummyCollections } from "./collections/utils/createDummyCollections";
+import { useState } from 'react';
+import { useCollections } from './collections/hooks/useCollections';
+import { CollectionsList } from './collections/components/CollectionsList';
+import { CollectionImportExport } from './collections/components/CollectionImportExport';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const Collections = () => {
-  const { collections, isLoading, error, refetch, processPayment, isProcessingPayment } = useCollections();
-  const { toast } = useToast();
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
-  const [isCreatingDummy, setIsCreatingDummy] = useState(false);
-
-  const handleSelectCollection = (collection: Collection) => {
-    setSelectedCollection(collection);
+export default function Collections() {
+  const { customers, isLoading } = useCollections();
+  const navigate = useNavigate();
+  
+  const handleAddCollection = () => {
+    navigate('/dashboard/collections/add');
   };
-
-  const handleProcessPayment = async (collection: Collection) => {
-    processPayment(collection);
-  };
-
-  const handleCreateDummyData = async () => {
-    try {
-      setIsCreatingDummy(true);
-      await createDummyCollections();
-      
-      toast({
-        title: "Data Dummy Dibuat",
-        description: "Data koleksi dummy berhasil dibuat untuk testing.",
-      });
-      
-      refetch();
-    } catch (error: any) {
-      console.error("Error creating dummy data:", error);
-      toast({
-        variant: "destructive",
-        title: "Gagal Membuat Data",
-        description: error.message || "Gagal membuat data dummy",
-      });
-    } finally {
-      setIsCreatingDummy(false);
-    }
-  };
-
-  const exportToExcel = (collections: Collection[]) => {
-    try {
-      CollectionService.exportToExcel(collections);
-      toast({
-        title: "Export Successful",
-        description: `${collections.length} collections exported to Excel`,
-      });
-    } catch (error: any) {
-      console.error("Export error:", error);
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: error.message || "Failed to export collections to Excel",
-      });
-    }
-  };
-
-  const importFromExcel = async (file: File) => {
-    try {
-      const importedCount = await CollectionService.importFromExcel(file);
-      toast({
-        title: "Import Successful",
-        description: `${importedCount} collections imported from Excel`,
-      });
-      refetch();
-    } catch (error: any) {
-      console.error("Import error:", error);
-      toast({
-        variant: "destructive",
-        title: "Import Failed",
-        description: error.message || "Failed to import collections from Excel",
-      });
-    }
-  };
-
+  
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Collections</h1>
-        <Button 
-          onClick={handleCreateDummyData} 
-          disabled={isCreatingDummy}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          {isCreatingDummy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <PlusCircle className="h-4 w-4" />
-          )}
-          Buat Data Dummy
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Collections</h2>
+          <p className="text-muted-foreground">
+            Manage customer payment collections and track due dates
+          </p>
+        </div>
+        <Button onClick={handleAddCollection}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Collection
         </Button>
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-6">
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <CollectionsList 
-              collections={collections}
-              onSelectCollection={handleSelectCollection}
-            />
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <CollectionImportExport 
-            collections={collections}
-            exportToExcel={exportToExcel}
-            importFromExcel={importFromExcel}
-          />
-          
-          {selectedCollection && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Collection Details</CardTitle>
-                <CardDescription>
-                  Detailed information about the selected collection
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Customer:</span>
-                    <span>{selectedCollection.customer_name || selectedCollection.customer?.name || 'Unknown'}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Invoice Number:</span>
-                    <span>{selectedCollection.invoice_number || 'N/A'}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Amount:</span>
-                    <span>${selectedCollection.amount.toFixed(2)}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Due Date:</span>
-                    <span>
-                      {selectedCollection.due_date ? 
-                        new Date(selectedCollection.due_date).toLocaleDateString() : 
-                        'Not set'
-                      }
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Payment Date:</span>
-                    <span>
-                      {selectedCollection.payment_date ? 
-                        new Date(selectedCollection.payment_date).toLocaleDateString() : 
-                        'Not paid yet'
-                      }
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Bank Account:</span>
-                    <span>{selectedCollection.bank_account || 'Not specified'}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="text-sm text-muted-foreground">Status:</span>
-                    <span className="capitalize">{selectedCollection.status}</span>
-                  </div>
-                  {selectedCollection.notes && (
-                    <div className="pt-2">
-                      <span className="text-sm text-muted-foreground block">Notes:</span>
-                      <p className="text-sm mt-1">{selectedCollection.notes}</p>
-                    </div>
-                  )}
-                  
-                  {selectedCollection.status !== 'paid' && (
-                    <div className="pt-4">
-                      <Button 
-                        className="w-full bg-green-500 hover:bg-green-600"
-                        onClick={() => handleProcessPayment(selectedCollection)}
-                        disabled={isProcessingPayment}
-                      >
-                        {isProcessingPayment ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          "Process Payment"
-                        )}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+      
+      <CollectionsList customers={customers} isLoading={isLoading} />
+      <CollectionImportExport />
     </div>
   );
-};
-
-export default Collections;
+}
