@@ -13,6 +13,7 @@ import Products from "@/pages/Products";
 import Orders from "@/pages/Orders";
 import RoutesPage from "@/pages/Routes"; // Renamed import to avoid conflict
 import Transactions from "@/pages/Transactions";
+import Collections from "@/pages/Collections";
 import NotFound from "./pages/NotFound";
 import Index from "@/pages/Index";
 
@@ -22,12 +23,14 @@ import AddProduct from "@/pages/products/AddProduct";
 import AddOrder from "@/pages/orders/AddOrder";
 import CreateRoute from "@/pages/routes/CreateRoute";
 import AddTransaction from "@/pages/transactions/AddTransaction";
+import AddCollection from "@/pages/collections/AddCollection";
 
 // Import the new detail view components
 import CustomerDetail from "@/pages/customers/CustomerDetail";
 import ProductDetail from "@/pages/products/ProductDetail";
 import OrderDetail from "@/pages/orders/OrderDetail";
 import RouteDetail from "@/pages/routes/RouteDetail";
+import EditCustomer from "@/pages/customers/EditCustomer";
 
 // Import the edit route component
 import EditRoute from "@/pages/routes/EditRoute";
@@ -51,6 +54,7 @@ const App = () => (
               <Route path="customers" element={<Customers />} />
               <Route path="customers/:id" element={<CustomerDetail />} />
               <Route path="customers/add" element={<AddCustomer />} />
+              <Route path="customers/edit/:id" element={<EditCustomer />} />
               
               <Route path="products" element={<Products />} />
               <Route path="products/:id" element={<ProductDetail />} />
@@ -64,6 +68,9 @@ const App = () => (
               <Route path="routes/:id" element={<RouteDetail />} />
               <Route path="routes/create" element={<CreateRoute />} />
               <Route path="routes/edit/:id" element={<EditRoute />} />
+              
+              <Route path="collections" element={<Collections />} />
+              <Route path="collections/add" element={<AddCollection />} />
               
               <Route path="transactions" element={<Transactions />} />
               <Route path="transactions/:id" element={<div className="p-4 animate-fade-in">Transaction details coming soon</div>} />

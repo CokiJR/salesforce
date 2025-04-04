@@ -11,67 +11,68 @@ export type Database = {
     Tables: {
       collections: {
         Row: {
-          id: string
-          customer_id: string
           amount: number
-          due_date: string
-          payment_date: string | null
-          status: string
-          notes: string | null
-          created_at: string
-          updated_at: string
           bank_account: string | null
-          transaction_id: string | null
+          created_at: string
+          customer_id: string
+          customer_name: string | null
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string | null
+          notes: string | null
+          order_id: string | null
+          payment_date: string | null
+          payment_term: string | null
+          status: string
           sync_status: string | null
+          transaction_id: string | null
+          updated_at: string
         }
         Insert: {
-          id?: string
-          customer_id: string
           amount: number
-          due_date: string
-          payment_date?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
           bank_account?: string | null
-          transaction_id?: string | null
+          created_at?: string
+          customer_id: string
+          customer_name?: string | null
+          due_date: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string | null
+          notes?: string | null
+          order_id?: string | null
+          payment_date?: string | null
+          payment_term?: string | null
+          status?: string
           sync_status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
         }
         Update: {
-          id?: string
-          customer_id?: string
           amount?: number
-          due_date?: string
-          payment_date?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
           bank_account?: string | null
-          transaction_id?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_name?: string | null
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string | null
+          notes?: string | null
+          order_id?: string | null
+          payment_date?: string | null
+          payment_term?: string | null
+          status?: string
           sync_status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "collections_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "collections_transaction_id_fkey"
-            columns: ["transaction_id"]
-            isOneToOne: false
-            referencedRelation: "transactions"
-            referencedColumns: ["id"]
-          },
-        ]
-      },
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string
+          bank_account: string | null
           city: string
           contact_person: string
           created_at: string
@@ -80,11 +81,14 @@ export type Database = {
           id: string
           location: Json | null
           name: string
+          payment_term: string | null
+          payment_term_description: string | null
           phone: string
           status: string
         }
         Insert: {
           address: string
+          bank_account?: string | null
           city: string
           contact_person: string
           created_at?: string
@@ -93,11 +97,14 @@ export type Database = {
           id?: string
           location?: Json | null
           name: string
+          payment_term?: string | null
+          payment_term_description?: string | null
           phone: string
           status: string
         }
         Update: {
           address?: string
+          bank_account?: string | null
           city?: string
           contact_person?: string
           created_at?: string
@@ -106,6 +113,8 @@ export type Database = {
           id?: string
           location?: Json | null
           name?: string
+          payment_term?: string | null
+          payment_term_description?: string | null
           phone?: string
           status?: string
         }
@@ -386,13 +395,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "transactions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -406,7 +408,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_customer_id: {
+        Args: {
+          old_id: string
+          new_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
