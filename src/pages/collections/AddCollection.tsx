@@ -38,6 +38,7 @@ export default function AddCollection() {
       const newCollection = {
         invoice_number: invoiceNumber,
         customer_name: customerName,
+        customer_id: '00000000-0000-0000-0000-000000000000', // Default customer ID
         amount: parseFloat(amount),
         due_date: dueDate.toISOString(),
         status: 'Unpaid' as const,
@@ -61,7 +62,7 @@ export default function AddCollection() {
       
       const { error } = await supabase
         .from('collections')
-        .insert([newCollection]);
+        .insert(newCollection);
       
       if (error) throw error;
       

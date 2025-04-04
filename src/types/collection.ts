@@ -3,7 +3,7 @@ import { Customer, Transaction } from '.';
 
 export interface Collection {
   id: string;
-  customer_id?: string;
+  customer_id: string;
   customer?: Customer;
   invoice_number: string;
   customer_name: string;

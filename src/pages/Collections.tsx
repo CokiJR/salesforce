@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,7 +89,6 @@ export default function Collections() {
     
     setDueSoonCollections(dueSoon);
     
-    // Show notification if there are collections due soon and notifications haven't been shown yet
     if (dueSoon.length > 0 && !showNotifications) {
       setShowNotifications(true);
     }
@@ -151,7 +149,6 @@ export default function Collections() {
         return;
       }
       
-      // Show preview instead of immediately importing
       setPreviewData(data);
       setShowPreview(true);
       
@@ -244,6 +241,7 @@ export default function Collections() {
         return {
           invoice_number: invoiceNumber || 'UNKNOWN',
           customer_name: customerName || 'UNKNOWN',
+          customer_id: '00000000-0000-0000-0000-000000000000',
           amount: isNaN(amount) ? 0 : amount,
           due_date: dueDate.toISOString(),
           status: 'Unpaid' as const
@@ -251,7 +249,6 @@ export default function Collections() {
       });
       
       for (const collection of collections) {
-        // Check if invoice already exists
         const { data: existingData } = await supabase
           .from('collections')
           .select('id')
@@ -259,7 +256,6 @@ export default function Collections() {
           .maybeSingle();
         
         if (existingData) {
-          // Update existing record
           const { error } = await supabase
             .from('collections')
             .update({
@@ -271,10 +267,9 @@ export default function Collections() {
           
           if (error) throw error;
         } else {
-          // Insert new record
           const { error } = await supabase
             .from('collections')
-            .insert([collection]);
+            .insert(collection);
           
           if (error) throw error;
         }
@@ -312,7 +307,6 @@ export default function Collections() {
   const exportToExcel = () => {
     let dataToExport = filteredCollections;
     
-    // Apply date range filter for export if specified
     if (exportDateRange?.from) {
       dataToExport = dataToExport.filter(c => {
         const dueDate = new Date(c.due_date);
@@ -382,7 +376,6 @@ export default function Collections() {
   
   return (
     <div className="space-y-4">
-      {/* Preview Dialog */}
       <AlertDialog open={showPreview} onOpenChange={setShowPreview}>
         <AlertDialogContent className="max-w-4xl">
           <AlertDialogHeader>
@@ -415,7 +408,6 @@ export default function Collections() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Export Dialog */}
       <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

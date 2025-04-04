@@ -19,7 +19,6 @@ export class CollectionService {
       throw new Error(error.message);
     }
 
-    // Cast the data to Collection[] to handle type mismatches
     return (data || []) as unknown as Collection[];
   }
   
@@ -60,9 +59,10 @@ export class CollectionService {
                 customer_id: row.customer_id || defaultCustomerId,
                 amount: Number(row.amount || 0),
                 due_date: row.due_date ? new Date(row.due_date).toISOString() : new Date().toISOString(),
-                status: row.status || 'pending',
+                status: row.status || 'Unpaid',
                 notes: row.notes || '',
-                bank_account: row.bank_account || null
+                bank_account: row.bank_account || null,
+                customer_name: row.customer_name || 'Unknown'
               };
               
               collectionsToCreate.push(collection);
@@ -72,9 +72,10 @@ export class CollectionService {
                 customer_id: String(row.customer_id),
                 amount: Number(row.amount),
                 due_date: new Date(row.due_date).toISOString(),
-                status: row.status || 'pending',
+                status: row.status || 'Unpaid',
                 notes: row.notes || '',
-                bank_account: row.bank_account || null
+                bank_account: row.bank_account || null,
+                customer_name: row.customer_name || 'Unknown'
               };
               
               collectionsToCreate.push(collection);
@@ -126,9 +127,15 @@ export class CollectionService {
   }
 
   static async createCollection(collection: Omit<Collection, 'id' | 'created_at' | 'updated_at'>): Promise<Collection> {
+    // Ensure customer_id exists
+    const collectionWithDefaults = {
+      ...collection,
+      customer_id: collection.customer_id || '00000000-0000-0000-0000-000000000000'
+    };
+
     const { data, error } = await supabase
       .from('collections')
-      .insert(collection)
+      .insert(collectionWithDefaults)
       .select()
       .single();
 
@@ -170,7 +177,7 @@ export class CollectionService {
 
   static async markAsPaid(id: string, transactionId?: string): Promise<Collection> {
     const updates: Partial<Collection> = {
-      status: 'paid',
+      status: 'Paid',
       payment_date: new Date().toISOString(),
     };
 
