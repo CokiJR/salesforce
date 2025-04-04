@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { Collection } from '@/types/collection';
 
 export default function AddCollection() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ export default function AddCollection() {
         return;
       }
       
+      // Fix: directly insert the object (not as an array)
       const { error } = await supabase
         .from('collections')
         .insert(newCollection);

@@ -29,3 +29,14 @@ export interface CollectionFilters {
   };
   customerId?: string;
 }
+
+export interface CollectionImportFormat {
+  invoice_number: string;
+  customer_name: string;
+  amount: number | string;
+  due_date: string;
+  status?: 'Paid' | 'Unpaid';
+  notes?: string;
+  bank_account?: string;
+  invoice_date?: string;
+}

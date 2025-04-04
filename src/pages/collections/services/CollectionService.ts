@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Collection, CollectionFilters } from '@/types/collection';
+import { Collection, CollectionFilters, CollectionImportFormat } from '@/types/collection';
 import { Customer } from '@/types';
 import * as XLSX from 'xlsx';
 
@@ -46,54 +45,43 @@ export class CollectionService {
           // Validate and transform data
           const collectionsToCreate: any[] = [];
           
-          for (const row of jsonData as any[]) {
-            // Validate required fields
-            if (!row.customer_id || !row.amount || !row.due_date) {
-              console.warn('Missing required fields in row:', row);
-              
-              // Use default values for missing fields
-              const defaultCustomerId = '00000000-0000-0000-0000-000000000000';
-              
-              // Transform to collection object
-              const collection = {
-                customer_id: row.customer_id || defaultCustomerId,
-                amount: Number(row.amount || 0),
-                due_date: row.due_date ? new Date(row.due_date).toISOString() : new Date().toISOString(),
-                status: row.status || 'Unpaid',
-                notes: row.notes || '',
-                bank_account: row.bank_account || null,
-                customer_name: row.customer_name || 'Unknown'
-              };
-              
-              collectionsToCreate.push(collection);
-            } else {
-              // Transform to collection object
-              const collection = {
-                customer_id: String(row.customer_id),
-                amount: Number(row.amount),
-                due_date: new Date(row.due_date).toISOString(),
-                status: row.status || 'Unpaid',
-                notes: row.notes || '',
-                bank_account: row.bank_account || null,
-                customer_name: row.customer_name || 'Unknown'
-              };
-              
-              collectionsToCreate.push(collection);
-            }
+          for (const row of jsonData as Record<string, any>[]) {
+            // Transform to collection object with required customer_id field
+            const collection = {
+              invoice_number: row.invoice_number || row.Invoice_Number || row['Invoice Number'] || '',
+              customer_name: row.customer_name || row.Customer_Name || row['Customer Name'] || 'Unknown',
+              customer_id: '00000000-0000-0000-0000-000000000000', // Default customer ID
+              amount: Number(row.amount || row.Amount || 0),
+              due_date: row.due_date || row.Due_Date || row['Due Date'] 
+                ? new Date(row.due_date || row.Due_Date || row['Due Date']).toISOString() 
+                : new Date().toISOString(),
+              status: (row.status || row.Status || 'Unpaid') === 'Paid' ? 'Paid' : 'Unpaid',
+              notes: row.notes || row.Notes || '',
+              bank_account: row.bank_account || row.Bank_Account || row['Bank Account'] || null,
+              invoice_date: row.invoice_date || row.Invoice_Date || row['Invoice Date']
+                ? new Date(row.invoice_date || row.Invoice_Date || row['Invoice Date']).toISOString()
+                : new Date().toISOString(),
+            };
+            
+            collectionsToCreate.push(collection);
           }
           
           // Batch insert collections
-          const { data: insertedData, error } = await supabase
-            .from('collections')
-            .insert(collectionsToCreate)
-            .select();
-          
-          if (error) {
-            console.error('Error importing collections:', error);
-            throw new Error(error.message);
+          if (collectionsToCreate.length > 0) {
+            const { data: insertedData, error } = await supabase
+              .from('collections')
+              .insert(collectionsToCreate)
+              .select();
+            
+            if (error) {
+              console.error('Error importing collections:', error);
+              throw new Error(error.message);
+            }
+            
+            resolve(insertedData as unknown as Collection[]);
+          } else {
+            throw new Error('No valid collections found in the file');
           }
-          
-          resolve(insertedData as unknown as Collection[]);
         } catch (error: any) {
           console.error('Error processing Excel file:', error);
           reject(error);
@@ -390,21 +378,22 @@ export class CollectionService {
   }
   
   /**
-   * Export collections to Excel file
+   * Export collections to Excel file with proper format
    * @param collections Collections to export
    * @returns Blob of Excel file
    */
   static exportToExcel(collections: Collection[]): Blob {
-    // Prepare data for export
+    // Prepare data for export with standardized column names
     const exportData = collections.map(collection => ({
-      customer_id: collection.customer_id,
-      customer_name: collection.customer?.name || collection.customer_name || '',
-      amount: collection.amount,
-      due_date: collection.due_date,
-      payment_date: collection.payment_date || '',
-      status: collection.status,
-      notes: collection.notes || '',
-      bank_account: collection.bank_account || ''
+      'Invoice Number': collection.invoice_number || '',
+      'Customer Name': collection.customer?.name || collection.customer_name || '',
+      'Amount': collection.amount,
+      'Due Date': collection.due_date,
+      'Invoice Date': collection.invoice_date || '',
+      'Payment Date': collection.payment_date || '',
+      'Status': collection.status,
+      'Notes': collection.notes || '',
+      'Bank Account': collection.bank_account || ''
     }));
     
     // Create worksheet
@@ -413,6 +402,39 @@ export class CollectionService {
     // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Collections');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Convert to Blob
+    return new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+  
+  /**
+   * Generate template Excel for import
+   * @returns Blob of template Excel file
+   */
+  static generateImportTemplate(): Blob {
+    // Create a template with column headers
+    const templateData = [
+      {
+        'Invoice Number': '',
+        'Customer Name': '',
+        'Amount': '',
+        'Due Date': 'YYYY-MM-DD',
+        'Invoice Date': 'YYYY-MM-DD',
+        'Status': 'Unpaid',
+        'Notes': '',
+        'Bank Account': ''
+      }
+    ];
+    
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Import Template');
     
     // Generate Excel file
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
