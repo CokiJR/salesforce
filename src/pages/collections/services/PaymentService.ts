@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Payment } from '@/types/collection';
 import { Customer } from '@/types';
@@ -21,14 +20,14 @@ export class PaymentService {
 
     // Process data and handle customer location properly
     return (data || []).map(item => {
-      const customerData = item.customer ? {
-        ...item.customer,
+      const customerData = item.customer && item.customer.length > 0 ? {
+        ...item.customer[0],
         // Properly convert location from Json to expected type or undefined
-        location: item.customer.location ? {
-          lat: Number((item.customer.location as any).lat || 0),
-          lng: Number((item.customer.location as any).lng || 0)
+        location: item.customer[0].location ? {
+          lat: Number((item.customer[0].location as any).lat || 0),
+          lng: Number((item.customer[0].location as any).lng || 0)
         } : undefined,
-        status: item.customer.status as "active" | "inactive"
+        status: item.customer[0].status as "active" | "inactive"
       } : undefined;
 
       return {
@@ -57,14 +56,14 @@ export class PaymentService {
 
     // Process data and handle customer location properly
     return (data || []).map(item => {
-      const customerData = item.customer ? {
-        ...item.customer,
+      const customerData = item.customer && item.customer.length > 0 ? {
+        ...item.customer[0],
         // Properly convert location from Json to expected type or undefined
-        location: item.customer.location ? {
-          lat: Number((item.customer.location as any).lat || 0),
-          lng: Number((item.customer.location as any).lng || 0)
+        location: item.customer[0].location ? {
+          lat: Number((item.customer[0].location as any).lat || 0),
+          lng: Number((item.customer[0].location as any).lng || 0)
         } : undefined,
-        status: item.customer.status as "active" | "inactive"
+        status: item.customer[0].status as "active" | "inactive"
       } : undefined;
 
       return {
@@ -141,16 +140,16 @@ export class PaymentService {
 
     // Process customer data to ensure location is properly formatted
     return (data || []).map(item => {
-      if (item.customer) {
+      if (item.customer && item.customer.length > 0) {
         return {
           ...item,
           customer: {
-            ...item.customer,
-            location: item.customer.location ? {
-              lat: Number((item.customer.location as any).lat || 0),
-              lng: Number((item.customer.location as any).lng || 0)
+            ...item.customer[0],
+            location: item.customer[0].location ? {
+              lat: Number((item.customer[0].location as any).lat || 0),
+              lng: Number((item.customer[0].location as any).lng || 0)
             } : undefined,
-            status: item.customer.status as "active" | "inactive"
+            status: item.customer[0].status as "active" | "inactive"
           }
         };
       }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -79,7 +80,22 @@ export default function Collections() {
       
       if (error) throw error;
       
-      setCollections(data as Collection[]);
+      // Transform data to match Collection type by handling the customer array
+      const transformedData = (data || []).map(item => {
+        return {
+          ...item,
+          customer: item.customer && item.customer.length > 0 ? {
+            ...item.customer[0],
+            location: item.customer[0].location ? {
+              lat: Number((item.customer[0].location as any).lat || 0),
+              lng: Number((item.customer[0].location as any).lng || 0)
+            } : undefined,
+            status: item.customer[0].status as "active" | "inactive"
+          } : undefined
+        };
+      });
+      
+      setCollections(transformedData as Collection[]);
     } catch (err: any) {
       console.error('Error fetching collections:', err);
       toast({
