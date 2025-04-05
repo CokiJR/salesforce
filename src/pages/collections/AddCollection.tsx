@@ -41,7 +41,30 @@ export default function AddCollection() {
         
       if (error) throw error;
       
-      setCustomers(data || []);
+      // Map the data to ensure it matches the Customer type
+      const mappedCustomers: Customer[] = (data || []).map(customer => ({
+        id: customer.id,
+        name: customer.name,
+        address: customer.address,
+        city: customer.city,
+        phone: customer.phone,
+        email: customer.email || '',
+        contact_person: customer.contact_person,
+        status: (customer.status === 'active' || customer.status === 'inactive') 
+          ? customer.status 
+          : 'inactive', // Default to 'inactive' if not a valid status
+        cycle: customer.cycle || 'YYYY',
+        created_at: customer.created_at,
+        bank_account: customer.bank_account || undefined,
+        payment_term: customer.payment_term || undefined,
+        payment_term_description: customer.payment_term_description || undefined,
+        location: customer.location ? {
+          lat: Number((customer.location as any).lat || 0),
+          lng: Number((customer.location as any).lng || 0)
+        } : undefined
+      }));
+      
+      setCustomers(mappedCustomers);
     } catch (error: any) {
       console.error('Error fetching customers:', error);
       toast({
