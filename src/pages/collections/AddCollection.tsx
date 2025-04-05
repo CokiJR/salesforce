@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,24 +8,56 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { toast } from '@/components/ui/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Collection } from '@/types/collection';
 import { CollectionService } from './services/CollectionService';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Customer } from '@/types';
 
 export default function AddCollection() {
   const navigate = useNavigate();
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [customerName, setCustomerName] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+  
+  // Fetch customers on component mount
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+  
+  const fetchCustomers = async () => {
+    try {
+      setIsLoadingCustomers(true);
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('name', { ascending: true });
+        
+      if (error) throw error;
+      
+      setCustomers(data || []);
+    } catch (error: any) {
+      console.error('Error fetching customers:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to load customers: ${error.message}`,
+      });
+    } finally {
+      setIsLoadingCustomers(false);
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!invoiceNumber || !customerName || !amount || !dueDate) {
+    if (!invoiceNumber || !selectedCustomerId || !amount || !dueDate) {
       toast({
         variant: "destructive",
         title: "Missing information",
@@ -37,17 +69,22 @@ export default function AddCollection() {
     try {
       setIsSubmitting(true);
       
+      // Find selected customer to get customer_name
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      
+      if (!selectedCustomer) {
+        throw new Error("Selected customer not found");
+      }
+      
       const newCollection = {
         invoice_number: invoiceNumber,
-        customer_name: customerName,
-        customer_id: '00000000-0000-0000-0000-000000000000', // Default customer ID
+        customer_name: selectedCustomer.name,
+        customer_id: selectedCustomerId,
         amount: parseFloat(amount),
         due_date: dueDate.toISOString(),
         status: 'Unpaid' as const,
       };
       
-      // Use the CollectionService instead of direct supabase calls
-      // This is more consistent with the rest of the application
       try {
         // First check for duplicate invoice number
         const { data: existingCollection, error: checkError } = await supabase
@@ -127,14 +164,26 @@ export default function AddCollection() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer-name">Customer Name *</Label>
-                <Input
-                  id="customer-name"
-                  placeholder="Enter customer name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  required
-                />
+                <Label htmlFor="customer">Customer *</Label>
+                {isLoadingCustomers ? (
+                  <div className="flex items-center space-x-2 h-10 px-3 border rounded-md bg-muted">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-muted-foreground">Loading customers...</span>
+                  </div>
+                ) : (
+                  <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
             

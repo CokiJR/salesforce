@@ -67,7 +67,15 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "collections_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -76,6 +84,7 @@ export type Database = {
           city: string
           contact_person: string
           created_at: string
+          customer_id: string | null
           cycle: string
           email: string | null
           id: string
@@ -92,6 +101,7 @@ export type Database = {
           city: string
           contact_person: string
           created_at?: string
+          customer_id?: string | null
           cycle?: string
           email?: string | null
           id?: string
@@ -108,6 +118,7 @@ export type Database = {
           city?: string
           contact_person?: string
           created_at?: string
+          customer_id?: string | null
           cycle?: string
           email?: string | null
           id?: string
