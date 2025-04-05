@@ -19,11 +19,24 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    // Ensure the status is properly typed
-    return (data || []).map(item => ({
-      ...item,
-      status: item.status as 'Pending' | 'Completed' | 'Failed'
-    })) as Payment[];
+    // Process data and handle customer location properly
+    return (data || []).map(item => {
+      const customerData = item.customer ? {
+        ...item.customer,
+        // Properly convert location from Json to expected type or undefined
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined,
+        status: item.customer.status as "active" | "inactive"
+      } : undefined;
+
+      return {
+        ...item,
+        status: item.status as 'Pending' | 'Completed' | 'Failed',
+        customer: customerData as Customer | undefined
+      };
+    }) as Payment[];
   }
 
   static async getPaymentsByCollectionId(collectionId: string): Promise<Payment[]> {
@@ -42,11 +55,24 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    // Ensure the status is properly typed
-    return (data || []).map(item => ({
-      ...item,
-      status: item.status as 'Pending' | 'Completed' | 'Failed'
-    })) as Payment[];
+    // Process data and handle customer location properly
+    return (data || []).map(item => {
+      const customerData = item.customer ? {
+        ...item.customer,
+        // Properly convert location from Json to expected type or undefined
+        location: item.customer.location ? {
+          lat: Number((item.customer.location as any).lat || 0),
+          lng: Number((item.customer.location as any).lng || 0)
+        } : undefined,
+        status: item.customer.status as "active" | "inactive"
+      } : undefined;
+
+      return {
+        ...item,
+        status: item.status as 'Pending' | 'Completed' | 'Failed',
+        customer: customerData as Customer | undefined
+      };
+    }) as Payment[];
   }
 
   static async createPayment(payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>): Promise<Payment> {
@@ -113,6 +139,22 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Process customer data to ensure location is properly formatted
+    return (data || []).map(item => {
+      if (item.customer) {
+        return {
+          ...item,
+          customer: {
+            ...item.customer,
+            location: item.customer.location ? {
+              lat: Number((item.customer.location as any).lat || 0),
+              lng: Number((item.customer.location as any).lng || 0)
+            } : undefined,
+            status: item.customer.status as "active" | "inactive"
+          }
+        };
+      }
+      return item;
+    });
   }
 }
