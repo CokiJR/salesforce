@@ -12,6 +12,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Collection } from '@/types/collection';
+import { CollectionService } from './services/CollectionService';
 
 export default function AddCollection() {
   const navigate = useNavigate();
@@ -45,41 +46,44 @@ export default function AddCollection() {
         status: 'Unpaid' as const,
       };
       
-      // Check for duplicate invoice number
-      const { data: existingCollection, error: checkError } = await supabase
-        .from('collections')
-        .select('id')
-        .eq('invoice_number', invoiceNumber)
-        .maybeSingle();
+      // Use the CollectionService instead of direct supabase calls
+      // This is more consistent with the rest of the application
+      try {
+        // First check for duplicate invoice number
+        const { data: existingCollection, error: checkError } = await supabase
+          .from('collections')
+          .select('id')
+          .eq('invoice_number', invoiceNumber)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.error('Error checking for duplicate invoice:', checkError);
+          throw checkError;
+        }
+          
+        if (existingCollection) {
+          toast({
+            variant: "destructive",
+            title: "Duplicate invoice",
+            description: "An invoice with this number already exists",
+          });
+          setIsSubmitting(false);
+          return;
+        }
         
-      if (checkError) {
-        console.error('Error checking for duplicate invoice:', checkError);
-        throw checkError;
-      }
+        // Create the collection using the service
+        await CollectionService.createCollection(newCollection);
         
-      if (existingCollection) {
         toast({
-          variant: "destructive",
-          title: "Duplicate invoice",
-          description: "An invoice with this number already exists",
+          title: "Collection added",
+          description: "The collection has been successfully added",
         });
-        setIsSubmitting(false);
-        return;
+        
+        navigate('/dashboard/collections');
+      } catch (error: any) {
+        console.error('Error in collection service:', error);
+        throw error;
       }
-      
-      // Insert the new collection - fixed to pass the object directly
-      const { error: insertError } = await supabase
-        .from('collections')
-        .insert(newCollection);
-      
-      if (insertError) throw insertError;
-      
-      toast({
-        title: "Collection added",
-        description: "The collection has been successfully added",
-      });
-      
-      navigate('/dashboard/collections');
       
     } catch (error: any) {
       console.error('Error adding collection:', error);
