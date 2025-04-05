@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -80,11 +79,14 @@ export default function Collections() {
       
       if (error) throw error;
       
-      // Transform data to match Collection type by handling the customer array
+      // Transform data to match Collection type by handling the customer property correctly
+      // The customer property from Supabase query comes as an array but should be a single object
       const transformedData = (data || []).map(item => {
         return {
           ...item,
-          customer: item.customer && item.customer.length > 0 ? {
+          // If customer array exists and has at least one element, use the first element as the customer object
+          // Otherwise set customer as undefined
+          customer: Array.isArray(item.customer) && item.customer.length > 0 ? {
             ...item.customer[0],
             location: item.customer[0].location ? {
               lat: Number((item.customer[0].location as any).lat || 0),
