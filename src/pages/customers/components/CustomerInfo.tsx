@@ -70,22 +70,26 @@ export function CustomerInfo({ customer, getCycleDescription }: CustomerInfoProp
               </span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">Payment Term</div>
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {customer.payment_term_description || customer.payment_term || 'N/A'}
-              </span>
+          {customer.payment_term_description || customer.payment_term ? (
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">Payment Term</div>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  {customer.payment_term_description || customer.payment_term || 'N/A'}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">Bank Account</div>
-            <div className="flex items-center space-x-2">
-              <Landmark className="h-4 w-4 text-muted-foreground" />
-              <span>{customer.bank_account || 'N/A'}</span>
+          ) : null}
+          {customer.bank_account && (
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">Bank Account</div>
+              <div className="flex items-center space-x-2">
+                <Landmark className="h-4 w-4 text-muted-foreground" />
+                <span>{customer.bank_account || 'N/A'}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -19,7 +19,11 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Ensure the status is properly typed
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as 'Pending' | 'Completed' | 'Failed'
+    })) as Payment[];
   }
 
   static async getPaymentsByCollectionId(collectionId: string): Promise<Payment[]> {
@@ -38,7 +42,11 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Ensure the status is properly typed
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as 'Pending' | 'Completed' | 'Failed'
+    })) as Payment[];
   }
 
   static async createPayment(payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>): Promise<Payment> {
@@ -53,7 +61,10 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data;
+    return {
+      ...data,
+      status: data.status as 'Pending' | 'Completed' | 'Failed'
+    } as Payment;
   }
 
   static async updatePaymentStatus(id: string, status: 'Pending' | 'Completed' | 'Failed'): Promise<Payment> {
@@ -69,7 +80,10 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data;
+    return {
+      ...data,
+      status: data.status as 'Pending' | 'Completed' | 'Failed'
+    } as Payment;
   }
 
   static async deletePayment(id: string): Promise<void> {

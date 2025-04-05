@@ -7,25 +7,25 @@ import { CustomerInfo } from './CustomerInfo';
 import { CustomerOrdersList } from './CustomerOrdersList';
 import { CustomerVisitsList } from './CustomerVisitsList';
 import { Customer } from '@/types';
-import { getCustomerCycleDescription } from '../utils/CustomerCycles';
+import { getCycleDescription } from '../utils/CustomerCycles';
 
 interface CustomerDetailViewProps {
   customer: Customer;
-  onEdit: () => void;
+  isLoading?: boolean;
 }
 
-export function CustomerDetailView({ customer, onEdit }: CustomerDetailViewProps) {
+export function CustomerDetailView({ customer, isLoading = false }: CustomerDetailViewProps) {
   const [activeTab, setActiveTab] = useState('info');
 
-  const getCycleDescription = (cycle: string): string => {
-    return getCustomerCycleDescription(cycle);
-  };
+  // Don't render anything if customer is not loaded yet
+  if (isLoading || !customer) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
       <CustomerHeader 
         customer={customer} 
-        onEdit={onEdit} 
       />
       
       <Tabs 
@@ -77,11 +77,17 @@ export function CustomerDetailView({ customer, onEdit }: CustomerDetailViewProps
         </TabsContent>
         
         <TabsContent value="orders" className="mt-0">
-          <CustomerOrdersList customerId={customer.id} />
+          <CustomerOrdersList 
+            isLoading={false} 
+            orders={[]} 
+          />
         </TabsContent>
         
         <TabsContent value="visits" className="mt-0">
-          <CustomerVisitsList customerId={customer.id} />
+          <CustomerVisitsList 
+            isLoading={false} 
+            visits={[]} 
+          />
         </TabsContent>
       </Tabs>
     </div>

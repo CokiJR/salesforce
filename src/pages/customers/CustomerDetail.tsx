@@ -54,10 +54,12 @@ const CustomerDetail = () => {
 
   return (
     <div className="animate-fade-in">
-      <CustomerDetailView 
-        customer={customer}
-        isLoading={loading}
-      />
+      {customer && (
+        <CustomerDetailView 
+          customer={customer}
+          isLoading={loading}
+        />
+      )}
     </div>
   );
 };
