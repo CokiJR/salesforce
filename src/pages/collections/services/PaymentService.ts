@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Payment } from '@/types/collection';
 import { Customer } from '@/types';
@@ -20,15 +21,28 @@ export class PaymentService {
 
     // Process data and handle customer location properly
     return (data || []).map(item => {
-      const customerData = item.customer && item.customer.length > 0 ? {
-        ...item.customer[0],
-        // Properly convert location from Json to expected type or undefined
-        location: item.customer[0].location ? {
-          lat: Number((item.customer[0].location as any).lat || 0),
-          lng: Number((item.customer[0].location as any).lng || 0)
-        } : undefined,
-        status: item.customer[0].status as "active" | "inactive"
-      } : undefined;
+      // Check if customer is an array or an object and handle accordingly
+      const customerData = item.customer ? (
+        // If it's an array, handle it that way
+        Array.isArray(item.customer) && item.customer.length > 0 ? {
+          ...item.customer[0],
+          // Properly convert location from Json to expected type or undefined
+          location: item.customer[0].location ? {
+            lat: Number((item.customer[0].location as any).lat || 0),
+            lng: Number((item.customer[0].location as any).lng || 0)
+          } : undefined,
+          status: item.customer[0].status as "active" | "inactive"
+        } : 
+        // If it's an object, handle it directly
+        {
+          ...item.customer as any,
+          location: (item.customer as any).location ? {
+            lat: Number(((item.customer as any).location as any).lat || 0),
+            lng: Number(((item.customer as any).location as any).lng || 0)
+          } : undefined,
+          status: (item.customer as any).status as "active" | "inactive"
+        }
+      ) : undefined;
 
       return {
         ...item,
@@ -56,15 +70,28 @@ export class PaymentService {
 
     // Process data and handle customer location properly
     return (data || []).map(item => {
-      const customerData = item.customer && item.customer.length > 0 ? {
-        ...item.customer[0],
-        // Properly convert location from Json to expected type or undefined
-        location: item.customer[0].location ? {
-          lat: Number((item.customer[0].location as any).lat || 0),
-          lng: Number((item.customer[0].location as any).lng || 0)
-        } : undefined,
-        status: item.customer[0].status as "active" | "inactive"
-      } : undefined;
+      // Check if customer is an array or an object and handle accordingly
+      const customerData = item.customer ? (
+        // If it's an array, handle it that way
+        Array.isArray(item.customer) && item.customer.length > 0 ? {
+          ...item.customer[0],
+          // Properly convert location from Json to expected type or undefined
+          location: item.customer[0].location ? {
+            lat: Number((item.customer[0].location as any).lat || 0),
+            lng: Number((item.customer[0].location as any).lng || 0)
+          } : undefined,
+          status: item.customer[0].status as "active" | "inactive"
+        } : 
+        // If it's an object, handle it directly
+        {
+          ...item.customer as any,
+          location: (item.customer as any).location ? {
+            lat: Number(((item.customer as any).location as any).lat || 0),
+            lng: Number(((item.customer as any).location as any).lng || 0)
+          } : undefined,
+          status: (item.customer as any).status as "active" | "inactive"
+        }
+      ) : undefined;
 
       return {
         ...item,
@@ -140,18 +167,34 @@ export class PaymentService {
 
     // Process customer data to ensure location is properly formatted
     return (data || []).map(item => {
-      if (item.customer && item.customer.length > 0) {
-        return {
-          ...item,
-          customer: {
-            ...item.customer[0],
-            location: item.customer[0].location ? {
-              lat: Number((item.customer[0].location as any).lat || 0),
-              lng: Number((item.customer[0].location as any).lng || 0)
-            } : undefined,
-            status: item.customer[0].status as "active" | "inactive"
-          }
-        };
+      if (item.customer) {
+        // Check if customer is an array or an object and handle accordingly
+        if (Array.isArray(item.customer) && item.customer.length > 0) {
+          return {
+            ...item,
+            customer: {
+              ...item.customer[0],
+              location: item.customer[0].location ? {
+                lat: Number((item.customer[0].location as any).lat || 0),
+                lng: Number((item.customer[0].location as any).lng || 0)
+              } : undefined,
+              status: item.customer[0].status as "active" | "inactive"
+            }
+          };
+        } else {
+          // Handle as a direct object
+          return {
+            ...item,
+            customer: {
+              ...(item.customer as any),
+              location: (item.customer as any).location ? {
+                lat: Number(((item.customer as any).location as any).lat || 0),
+                lng: Number(((item.customer as any).location as any).lng || 0)
+              } : undefined,
+              status: (item.customer as any).status as "active" | "inactive"
+            }
+          };
+        }
       }
       return item;
     });
