@@ -236,6 +236,57 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          bank_account: string
+          collection_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          payment_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_account: string
+          collection_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_date: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account?: string
+          collection_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string

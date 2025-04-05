@@ -41,3 +41,17 @@ export interface CollectionImportFormat {
   invoice_date?: string;
   customer_id?: string; // Added customer_id as optional for imports
 }
+
+export interface Payment {
+  id: string;
+  collection_id: string;
+  customer_id: string;
+  bank_account: string;
+  amount: number;
+  payment_date: string;
+  status: 'Pending' | 'Completed' | 'Failed';
+  created_at: string;
+  updated_at: string;
+  collection?: Collection;
+  customer?: Customer;
+}

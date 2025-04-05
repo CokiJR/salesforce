@@ -374,6 +374,10 @@ export default function Collections() {
     }
   };
   
+  const handleViewPayments = () => {
+    navigate('/dashboard/payments');
+  };
+  
   return (
     <div className="space-y-4">
       <AlertDialog open={showPreview} onOpenChange={setShowPreview}>
@@ -445,10 +449,15 @@ export default function Collections() {
             Manage customer payment collections and track due dates
           </p>
         </div>
-        <Button onClick={handleAddCollection}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Collection
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleViewPayments}>
+            View Payments
+          </Button>
+          <Button onClick={handleAddCollection}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Collection
+          </Button>
+        </div>
       </div>
       
       {dueSoonCollections.length > 0 && showNotifications && (

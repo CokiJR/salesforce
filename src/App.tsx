@@ -25,6 +25,8 @@ import AddOrder from "@/pages/orders/AddOrder";
 import CreateRoute from "@/pages/routes/CreateRoute";
 import AddTransaction from "@/pages/transactions/AddTransaction";
 import AddCollection from "@/pages/collections/AddCollection";
+import AddPayment from "@/pages/collections/AddPayment";
+import Payments from "@/pages/collections/Payments";
 
 // Import the new detail view components
 import CustomerDetail from "@/pages/customers/CustomerDetail";
@@ -74,6 +76,9 @@ const App = () => {
                   
                   <Route path="collections" element={<Collections />} />
                   <Route path="collections/add" element={<AddCollection />} />
+                  
+                  <Route path="payments" element={<Payments />} />
+                  <Route path="payments/add" element={<AddPayment />} />
                   
                   <Route path="transactions" element={<Transactions />} />
                   <Route path="transactions/:id" element={<div className="p-4 animate-fade-in">Transaction details coming soon</div>} />
