@@ -19,7 +19,7 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return (data || []) as unknown as Payment[];
+    return data || [];
   }
 
   static async getPaymentsByCollectionId(collectionId: string): Promise<Payment[]> {
@@ -38,7 +38,7 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return (data || []) as unknown as Payment[];
+    return data || [];
   }
 
   static async createPayment(payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>): Promise<Payment> {
@@ -53,7 +53,7 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data as unknown as Payment;
+    return data;
   }
 
   static async updatePaymentStatus(id: string, status: 'Pending' | 'Completed' | 'Failed'): Promise<Payment> {
@@ -69,7 +69,7 @@ export class PaymentService {
       throw new Error(error.message);
     }
 
-    return data as unknown as Payment;
+    return data;
   }
 
   static async deletePayment(id: string): Promise<void> {

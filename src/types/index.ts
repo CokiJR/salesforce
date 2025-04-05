@@ -21,6 +21,8 @@ export interface Customer {
   location?: { lat: number; lng: number };
   due_date?: string; // Date when payment is due
   bank_account?: string; // Bank account for payment validation
+  payment_term?: string; // Payment term code
+  payment_term_description?: string; // Description of payment term
 }
 
 export interface Product {
