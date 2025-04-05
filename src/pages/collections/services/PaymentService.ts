@@ -157,4 +157,19 @@ export class PaymentService {
       return item;
     });
   }
+  
+  static async getTotalPaymentsByCollectionId(collectionId: string): Promise<number> {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('collection_id', collectionId)
+      .eq('status', 'Completed');
+    
+    if (error) {
+      console.error('Error fetching total payments:', error);
+      throw new Error(error.message);
+    }
+    
+    return (data || []).reduce((total, payment) => total + Number(payment.amount), 0);
+  }
 }

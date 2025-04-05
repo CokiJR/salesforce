@@ -14,7 +14,8 @@ import {
   Loader2, 
   FileUp, 
   FileDown,
-  AlertCircle
+  AlertCircle,
+  DollarSign
 } from 'lucide-react';
 import { format, isAfter, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,6 +29,8 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { CollectionPreviewTable } from './collections/components/CollectionPreviewTable';
 import { Alert } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { PaymentService } from './collections/services/PaymentService';
+import { AddPaymentModal } from './collections/components/AddPaymentModal';
 
 export default function Collections() {
   const navigate = useNavigate();
@@ -44,6 +47,9 @@ export default function Collections() {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [dueSoonCollections, setDueSoonCollections] = useState<Collection[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentTotals, setPaymentTotals] = useState<{[key: string]: number}>({});
   
   useEffect(() => {
     fetchCollections();
@@ -53,13 +59,22 @@ export default function Collections() {
     applyFilters();
     checkDueSoonCollections();
   }, [collections, statusFilter, dateFilter]);
+
+  useEffect(() => {
+    if (collections.length > 0) {
+      fetchPaymentTotals();
+    }
+  }, [collections]);
   
   const fetchCollections = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('collections')
-        .select('*')
+        .select(`
+          *,
+          customer:customers(*)
+        `)
         .order('due_date', { ascending: true });
       
       if (error) throw error;
@@ -74,6 +89,24 @@ export default function Collections() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPaymentTotals = async () => {
+    try {
+      const totals: {[key: string]: number} = {};
+      
+      // Fetch totals only for unpaid collections to improve performance
+      const unpaidCollections = collections.filter(c => c.status === 'Unpaid');
+      
+      for (const collection of unpaidCollections) {
+        const total = await PaymentService.getTotalPaymentsByCollectionId(collection.id);
+        totals[collection.id] = total;
+      }
+      
+      setPaymentTotals(totals);
+    } catch (error) {
+      console.error('Error fetching payment totals:', error);
     }
   };
   
@@ -377,6 +410,16 @@ export default function Collections() {
   const handleViewPayments = () => {
     navigate('/dashboard/payments');
   };
+
+  const handleAddPayment = (collection: Collection) => {
+    setSelectedCollection(collection);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentAdded = () => {
+    fetchCollections();
+    fetchPaymentTotals();
+  };
   
   return (
     <div className="space-y-4">
@@ -590,6 +633,7 @@ export default function Collections() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Payment</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -605,6 +649,25 @@ export default function Collections() {
                         currency: 'USD'
                       }).format(collection.amount)}</TableCell>
                       <TableCell>
+                        {collection.status === 'Unpaid' && paymentTotals[collection.id] ? (
+                          <span className="text-green-600">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD'
+                            }).format(paymentTotals[collection.id])}
+                          </span>
+                        ) : collection.status === 'Paid' ? (
+                          <span className="text-green-600">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD'
+                            }).format(collection.amount)}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Badge className={collection.status === 'Paid' 
                           ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
@@ -613,23 +676,35 @@ export default function Collections() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {collection.status === 'Unpaid' ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handlePaymentStatusChange(collection.id, 'Paid')}
-                          >
-                            Mark as Paid
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handlePaymentStatusChange(collection.id, 'Unpaid')}
-                          >
-                            Mark as Unpaid
-                          </Button>
-                        )}
+                        <div className="flex justify-end gap-2">
+                          {collection.status === 'Unpaid' ? (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleAddPayment(collection)}
+                              >
+                                <DollarSign className="mr-1 h-3 w-3" />
+                                Add Payment
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handlePaymentStatusChange(collection.id, 'Paid')}
+                              >
+                                Mark as Paid
+                              </Button>
+                            </>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handlePaymentStatusChange(collection.id, 'Unpaid')}
+                            >
+                              Mark as Unpaid
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -643,6 +718,16 @@ export default function Collections() {
           )}
         </CardContent>
       </Card>
+
+      {selectedCollection && (
+        <AddPaymentModal
+          collection={selectedCollection}
+          customer={selectedCollection.customer}
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentAdded={handlePaymentAdded}
+        />
+      )}
     </div>
   );
 }
